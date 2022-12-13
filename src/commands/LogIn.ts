@@ -12,12 +12,10 @@ export class LogIn implements Command {
 		if (apiToken) {
 			this.vercel
 				.logIn(apiToken)
-				.then(
-					success =>
-						success &&
-						vscode.commands.executeCommand(
-							"workbench.view.extension.vercel-sidebar"
-						)
+				.then(() =>
+					vscode.commands.executeCommand(
+						"workbench.view.extension.vercel-sidebar"
+					)
 				);
 		} else {
 			vscode.window.showErrorMessage(

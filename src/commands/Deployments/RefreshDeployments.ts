@@ -1,5 +1,5 @@
-import { Command } from "../CommandManager";
-import { VercelManager } from "../features/VercelManager";
+import { Command } from "../../CommandManager";
+import { VercelManager } from "../../features/VercelManager";
 
 export class RefreshDeployments implements Command {
 	public readonly id = "vercel.refreshDeployments";

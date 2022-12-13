@@ -1,0 +1,35 @@
+* all: GET /v9/projects/{projectId}/env?decrypt=true
+	: VercelEnvironnmentGetAllResponse
+	> Returns values in array
+
+
+* one: GET /v1/projects/{projectId}/env/{id}
+	: VercelEnvironnmentGetSingleResponse
+	> Returns info about env var
+
+* remove: DELETE /v9/projects/{projectId}/env/{keyOrId}
+	: VercelEnvironnmentRemoveResponse
+
+
+* create: POST /v10/projects/{projectId}/env
+	: VercelEnvironmentCreateResponse
+	> key, value, type and target
+
+
+* edit: PATCH /v9/projects/{projectId}/env/{id}
+	: VercelEnvironnmentEditResponse
+  > body
+    > "gitBranch": "<insert-value>",
+	> "Type": "secret" | "system" | "encrypted" | "plain"
+    > "key": "<insert-value>",
+    > "target": 
+	:		(	
+	:		| "production"
+	:		| "preview"
+	:		| "development"
+	:		| "preview"
+	:		| "development"
+	:		| "preview"
+	:		| "development"
+	:		)[],
+    > "value": JSON.stringify(VALUE_TO_SET)

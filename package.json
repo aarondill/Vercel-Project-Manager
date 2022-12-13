@@ -11,10 +11,24 @@
 		"Other"
 	],
 	"activationEvents": [
+		"onWebView:vercel.logView",
+		"onView:vercel-deployments",
+		"onView:vercel-environment",
 		"onCommand:vercel.dev",
 		"onCommand:vercel.logIn",
-		"onWebView:vercel.logView",
-		"onView:vercel-deployments"
+		"onCommand:vercel.logOut",
+		"onCommand:vercel.openLogPanel",
+		"onCommand:vercel.refreshLogPanel",
+		"onCommand:vercel.openURL",
+		"onCommand:vercel.copyURL",
+		"onCommand:vercel.refreshDeployments",
+		"onCommand:vercel.refreshEnvironment",
+		"onCommand:vercel.setEnvironment",
+		"onCommand:vercel.removeEnvironment",
+		"onCommand:vercel.createEnvironment",
+		"onCommand:vercel.openEnvironmentLink",
+		"onCommand:vercel.openDeploymentsLink",
+		"onCommand:vercel.createLinkToVercel"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -75,13 +89,58 @@
 				"category": "Vercel Project Manager",
 				"title": "Refresh Deployments",
 				"icon": "$(extensions-refresh)"
+			},
+			{
+				"command": "vercel.refreshEnvironment",
+				"category": "Vercel Project Manager",
+				"title": "Refresh Environment Variables",
+				"icon": "$(extensions-refresh)"
+			},
+			{
+				"command": "vercel.setEnvironment",
+				"category": "Vercel Project Manager",
+				"title": "Set Environment Variable",
+				"icon": "$(extensions-wrench)"
+			},
+			{
+				"command": "vercel.removeEnvironment",
+				"title": "Remove Environment Variable",
+				"category": "Vercel Project Manager",
+				"icon": "$(trash)"
+			},
+			{
+				"command": "vercel.createEnvironment",
+				"title": "Create Environment Variable",
+				"category": "Vercel Project Manager",
+				"icon": "$(plus)"
+			},
+			{
+				"command": "vercel.openEnvironmentLink",
+				"title": "Open Environment Setup in Browser",
+				"category": "Vercel Project Manager",
+				"icon": "$(link-external)"
+			},
+			{
+				"command": "vercel.openDeploymentsLink",
+				"title": "Open Deployments in Browser",
+				"category": "Vercel Project Manager",
+				"icon": "$(link-external)"
+			},
+			{
+				"command": "vercel.createLinkToVercel",
+				"title": "Link current workspace to a Vercel project",
+				"category": "Vercel Project Manager",
+				"icon": {
+					"dark": "resources/icons/dark/vercel.svg",
+					"light": "resources/icons/light/vercel.svg"
+				}
 			}
 		],
 		"viewsContainers": {
 			"activitybar": [
 				{
 					"id": "vercel-sidebar",
-					"title": "VSCode Vercel",
+					"title": "Vercel Project Manager",
 					"icon": "resources/icons/dark/vercel.svg"
 				}
 			]
@@ -91,6 +150,21 @@
 				"view": "vercel-deployments",
 				"contents": "You have not yet logged in to view deployments.\n[▲ Log In with Vercel](command:vercel.logIn)",
 				"when": "!vercelLoggedIn"
+			},
+			{
+				"view": "vercel-environment",
+				"contents": "You have not yet logged in to view environment variables.\n[▲ Log In with Vercel](command:vercel.logIn)",
+				"when": "!vercelLoggedIn"
+			},
+			{
+				"view": "vercel-deployments",
+				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.createLinkToVercel)",
+				"when": "vercelLoggedIn && !vercelLinked"
+			},
+			{
+				"view": "vercel-environment",
+				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.createLinkToVercel)",
+				"when": "vercelLoggedIn && !vercelLinked"
 			}
 		],
 		"views": {
@@ -103,8 +177,8 @@
 				},
 				{
 					"type": "tree",
-					"id": "vercel-projects",
-					"name": "Projects",
+					"id": "vercel-environment",
+					"name": "Environment Variables",
 					"visibility": "collapsed"
 				}
 			]
@@ -112,8 +186,8 @@
 		"menus": {
 			"commandPalette": [
 				{
-					"command": "vercel.refreshDeployments",
-					"when": "false"
+					"command": "vercel.createLinkToVercel",
+					"when": "vercelLoggedIn"
 				},
 				{
 					"command": "vercel.openLogPanel",
@@ -130,12 +204,65 @@
 				{
 					"command": "vercel.copyURL",
 					"when": "false"
+				},
+				{
+					"command": "vercel.dev"
+				},
+				{
+					"command": "vercel.logIn"
+				},
+				{
+					"command": "vercel.logOut",
+					"when": "vercelLoggedIn"
+				},
+				{
+					"command": "vercel.refreshDeployments",
+					"when": "vercelLoggedIn && vercelLinked"
+				},
+				{
+					"command": "vercel.refreshEnvironment",
+					"when": "vercelLoggedIn && vercelLinked"
+				},
+				{
+					"command": "vercel.setEnvironment",
+					"when": "vercelLoggedIn && vercelLinked"
+				},
+				{
+					"command": "vercel.removeEnvironment",
+					"when": "vercelLoggedIn && vercelLinked"
+				},
+				{
+					"command": "vercel.createEnvironment",
+					"when": "vercelLoggedIn && vercelLinked"
+				},
+				{
+					"command": "vercel.openEnvironmentLink",
+					"when": "vercelLoggedIn && vercelLinked"
+				},
+				{
+					"command": "vercel.openDeploymentsLink",
+					"when": "vercelLoggedIn && vercelLinked"
 				}
 			],
 			"view/title": [
 				{
 					"command": "vercel.refreshDeployments",
-					"when": "view == vercel-deployments",
+					"when": "view == vercel-deployments && vercelLinked",
+					"group": "navigation"
+				},
+				{
+					"command": "vercel.openDeploymentsLink",
+					"when": "view == vercel-deployments && vercelLinked",
+					"group": "navigation"
+				},
+				{
+					"command": "vercel.refreshEnvironment",
+					"when": "view == vercel-environment",
+					"group": "navigation"
+				},
+				{
+					"command": "vercel.openEnvironmentLink",
+					"when": "view == vercel-environment && vercelLinked",
 					"group": "navigation"
 				}
 			],
@@ -156,6 +283,11 @@
 					"command": "vercel.copyURL",
 					"when": "view == vercel-deployments && viewItem == deployment || viewItem == deploymentLog",
 					"group": "inline@2"
+				},
+				{
+					"command": "vercel.removeEnvironment",
+					"when": "view == vercel-environment && viewItem == Environment && vercelLinked",
+					"group": "inline@1"
 				}
 			]
 		}

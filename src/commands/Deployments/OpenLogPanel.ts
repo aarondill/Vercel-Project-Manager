@@ -1,5 +1,5 @@
-import { Command } from "../CommandManager";
-import { LogPanelManager } from "../features/LogPanelManager";
+import { Command } from "../../CommandManager";
+import { LogPanelManager } from "../../features/LogPanelManager";
 
 export class OpenLogPanel implements Command {
 	public readonly id = "vercel.openLogPanel";
