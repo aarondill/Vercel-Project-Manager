@@ -12,9 +12,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		onAuthStateChanged: state => {
 			vscode.commands.executeCommand("setContext", "vercelLoggedIn", state);
 		},
-		onLinkedStateChanged: state => {
-			vscode.commands.executeCommand("setContext", "vercelLinked", state);
-		},
 	});
 
 	const vercel = new VercelManager(token);

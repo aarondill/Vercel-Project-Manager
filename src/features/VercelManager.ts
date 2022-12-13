@@ -3,9 +3,7 @@
 
 import fetch, { RequestInit, Response } from "node-fetch";
 import urlcat, { ParamMap } from "urlcat";
-import * as vscode from "vscode";
 
-import { parseError } from "../utils/parseError";
 import {
 	VercelAuthUser,
 	VercelDeploymentResponse,
@@ -123,10 +121,18 @@ export class VercelManager {
 			this.onDidDeploymentsUpdated();
 			this.onDidEnvironmentsUpdated();
 		}, 5 * 60 * 1000); // refresh every 5 mins
+		//retains this value of vercel
+		token.onProjectStateChanged = (id?: string) => {
+			this.onDidDeploymentsUpdated();
+			this.onDidEnvironmentsUpdated();
+			// force refresh of info on next call.
+			this.projectInfo = null;
+			this.userInfo = null;
+		};
 	}
 	private projectInfo: VercelProjectInformationResponse | null = null;
-	async getProjectInfo() {
-		if (this.projectInfo !== null) return this.projectInfo;
+	async getProjectInfo(refresh: boolean = false) {
+		if (this.projectInfo !== null && !refresh) return this.projectInfo;
 		const response = await Api.projectInfo(
 			{
 				projectId: this.selectedProject,
@@ -139,8 +145,8 @@ export class VercelManager {
 	}
 	private userInfo: VercelAuthUser | null = null;
 
-	async getUserInfo() {
-		if (this.userInfo !== null) return this.userInfo;
+	async getUserInfo(refresh: boolean = false) {
+		if (this.userInfo !== null && !refresh) return this.userInfo;
 		const response = await Api.userInfo({}, this.authHeaders);
 		const json = (await response.json()) as { user: VercelAuthUser };
 		const result = json.user;
@@ -148,18 +154,16 @@ export class VercelManager {
 		return result;
 	}
 
-	async logIn(apiToken: string): Promise<boolean> {
+	async logIn(apiToken: string): Promise<void> {
 		await this.token.setAuth(apiToken);
-		await this.token.setProject(await this.getProjectIdFromJson());
 		this.onDidDeploymentsUpdated();
 		this.onDidEnvironmentsUpdated();
-		return false;
 	}
 
 	async logOut() {
 		await this.token.setAuth(undefined);
 		await this.token.setProject(undefined);
-
+		this.token.onProjectStateChanged = () => {};
 		this.onDidLogOut();
 		this.onDidDeploymentsUpdated();
 		this.onDidEnvironmentsUpdated();
@@ -196,33 +200,6 @@ export class VercelManager {
 			return undefined;
 		}
 	}
-	private getProjectIdFromJson = async (): Promise<string | undefined> => {
-		if (!vscode.workspace.workspaceFolders?.[0]) {
-			return undefined;
-		}
-		const wf = vscode.workspace.workspaceFolders[0].uri.path;
-		const filePath = `${wf}/.vercel/project.json`;
-		const fileUri: vscode.Uri = vscode.Uri.file(filePath);
-		let vercelProjectJson: Uint8Array | null = null;
-		try {
-			vercelProjectJson = await vscode.workspace.fs.readFile(fileUri);
-		} catch {
-			return undefined;
-		}
-		try {
-			const stringJson: string =
-				Buffer.from(vercelProjectJson).toString("utf8");
-			const parsedVercelJSON: { projectId?: string } = JSON.parse(
-				stringJson
-			) as {
-				projectId?: string;
-			};
-			return parsedVercelJSON.projectId;
-		} catch (error) {
-			await vscode.window.showErrorMessage(parseError(error));
-			return undefined;
-		}
-	};
 
 	get selectedProject() {
 		return this.token.getProject();
