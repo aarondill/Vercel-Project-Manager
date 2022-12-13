@@ -23,6 +23,12 @@ export class TokenManager {
 		// initial run
 		this.onAuthStateChanged(!!globalState.get(this.authKey));
 		this.onLinkedStateChanged(!!globalState.get(this.linkKey));
+
+		/**
+		 * add file listener (@link https://code.visualstudio.com/api/references/vscode-api#workspace.createFileSystemWatcher )
+		 * call onLinkedStateChanged on change of .vercel/project.json file.
+		 */
+		const a = "";
 	}
 
 	setLinked(token: boolean) {

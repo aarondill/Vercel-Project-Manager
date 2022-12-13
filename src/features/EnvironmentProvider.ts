@@ -33,6 +33,7 @@ export class EnvironmentProvider
 			];
 			return items;
 		} else {
+			if (!this.vercel.selectedProject) return [];
 			const items: vscode.TreeItem[] = [new CreateEnvironment()];
 			const res = await this.vercel.getEnvironment();
 			if (res) {

@@ -7,8 +7,8 @@ export class CreateLinkToVercel implements Command {
 	constructor(private readonly vercel: VercelManager) {}
 	execute() {
 		const code = [
-			`echo && echo "Type cmd/ctrl/meta + c to quit" && echo`,
-			`if npm ls -g vercel &>/dev/null`,
+			`clear && echo "Type cmd/ctrl/meta + c to quit" && echo`,
+			`if [[ -x "$(command -v vercel)" ]]`,
 			`then vercel link -t "${this.vercel.auth ?? ""}" `,
 			`else echo "The vercel CLI is required for this implementation.` +
 				`\nPlease install with npm install -g vercel" && while true`,

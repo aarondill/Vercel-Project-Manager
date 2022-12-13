@@ -9,6 +9,7 @@ export class LogIn implements Command {
 	execute() {
 		const config = vscode.workspace.getConfiguration("vercel");
 		const apiToken = config.get("AccessToken") as string;
+		//TODO Add support for signing in through website
 		if (apiToken) {
 			this.vercel
 				.logIn(apiToken)
