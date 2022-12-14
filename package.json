@@ -257,7 +257,7 @@
 				},
 				{
 					"command": "vercel.refreshEnvironment",
-					"when": "view == vercel-environment",
+					"when": "view == vercel-environment && vercelLinked",
 					"group": "navigation"
 				},
 				{

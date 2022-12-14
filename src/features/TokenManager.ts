@@ -6,7 +6,52 @@ export class TokenManager {
 	private readonly projectKey = "vercel_selected_project";
 
 	private readonly onAuthStateChanged: (state: boolean) => void;
+	private fileWatcher: vscode.FileSystemWatcher | null = null;
+	private folderWatcher: vscode.FileSystemWatcher | null = null;
+
+	public onDidLogOut() {
+		this.fileWatcher?.dispose();
+		this.folderWatcher?.dispose();
+		this.fileWatcher = null;
+		this.folderWatcher = null;
+	}
+	public onDidLogIn() {
+		console.log("watchers!");
+		/**
+		 * add file listener (@link https://code.visualstudio.com/api/references/vscode-api#workspace.createFileSystemWatcher )
+		 * call onLinkedStateChanged on change of .vercel/project.json file.
+		 */
+		const ws = vscode.workspace.workspaceFolders?.[0];
+		if (!ws) return;
+		this.fileWatcher?.dispose();
+		this.folderWatcher?.dispose();
+		this.fileWatcher = vscode.workspace.createFileSystemWatcher(
+			new vscode.RelativePattern(ws, ".vercel/project.json"),
+			false,
+			false,
+			false
+		);
+		this.folderWatcher = vscode.workspace.createFileSystemWatcher(
+			new vscode.RelativePattern(ws, ".vercel/"),
+			true,
+			true,
+			false
+		);
+		const update = async (path?: vscode.Uri) =>
+			await this.setProject(await this.getProjectIdFromJson(path));
+
+		const remove = async (path: vscode.Uri) => this.setProject(undefined);
+
+		this.fileWatcher.onDidChange(update);
+		this.fileWatcher.onDidCreate(update);
+		this.fileWatcher.onDidDelete(remove);
+		this.folderWatcher.onDidDelete(remove);
+		update();
+		this.onProjectStateChanged();
+	}
+
 	public onProjectStateChanged: (id?: string) => void;
+
 	constructor(
 		private readonly globalState: vscode.Memento,
 		{
@@ -21,36 +66,8 @@ export class TokenManager {
 		this.onProjectStateChanged = onProjectStateChanged ?? (x => x);
 		// initial run
 		this.onAuthStateChanged(!!globalState.get(this.authKey));
-
-		/**
-		 * add file listener (@link https://code.visualstudio.com/api/references/vscode-api#workspace.createFileSystemWatcher )
-		 * call onLinkedStateChanged on change of .vercel/project.json file.
-		 */
-		const ws = vscode.workspace.workspaceFolders?.[0];
-		if (!ws) return this;
-		const fileWatcher = vscode.workspace.createFileSystemWatcher(
-			new vscode.RelativePattern(ws, ".vercel/project.json"),
-			false,
-			false,
-			false
-		);
-		const folderWatcher = vscode.workspace.createFileSystemWatcher(
-			new vscode.RelativePattern(ws, ".vercel/"),
-			true,
-			true,
-			false
-		);
-		const update = async (path?: vscode.Uri) =>
-			await this.setProject(await this.getProjectIdFromJson(path));
-
-		const remove = async (path: vscode.Uri) => this.setProject(undefined);
-
-		fileWatcher.onDidChange(update);
-		fileWatcher.onDidCreate(update);
-		fileWatcher.onDidDelete(remove);
-		folderWatcher.onDidDelete(remove);
-		update();
-		this.onProjectStateChanged();
+		console.log(this.getAuth());
+		if (this.getAuth()) this.onDidLogIn();
 	}
 
 	setAuth(token: string | undefined) {
