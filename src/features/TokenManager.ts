@@ -16,7 +16,6 @@ export class TokenManager {
 		this.folderWatcher = null;
 	}
 	public onDidLogIn() {
-		console.log("watchers!");
 		/**
 		 * add file listener (@link https://code.visualstudio.com/api/references/vscode-api#workspace.createFileSystemWatcher )
 		 * call onLinkedStateChanged on change of .vercel/project.json file.
@@ -66,7 +65,6 @@ export class TokenManager {
 		this.onProjectStateChanged = onProjectStateChanged ?? (x => x);
 		// initial run
 		this.onAuthStateChanged(!!globalState.get(this.authKey));
-		console.log(this.getAuth());
 		if (this.getAuth()) this.onDidLogIn();
 	}
 

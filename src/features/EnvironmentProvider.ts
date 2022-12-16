@@ -35,7 +35,7 @@ export class EnvironmentProvider
 		} else {
 			if (!this.vercel.selectedProject) return [];
 			const items: vscode.TreeItem[] = [new CreateEnvironment()];
-			const res = await this.vercel.getEnvironment();
+			const res = await this.vercel.env.getAll();
 			if (res) {
 				res.forEach(x => {
 					items.push(new EnvironmentItem(x));
@@ -47,31 +47,34 @@ export class EnvironmentProvider
 }
 class EnvironmentItem extends vscode.TreeItem {
 	envId: string;
+	key: string;
 	contextValue = "Environment";
 	constructor(public readonly data: VercelEnvironmentInformation) {
 		super(data.key!, vscode.TreeItemCollapsibleState.Collapsed);
 		this.iconPath = new vscode.ThemeIcon("key");
 		this.tooltip = data.key;
 		this.envId = data.id!;
+		this.key = data.key!;
 	}
 }
 
 class EnvironmentTarget extends vscode.TreeItem {
 	iconPath = new vscode.ThemeIcon("location");
 	envId: string;
-
+	key: string;
 	constructor(element: EnvironmentItem) {
-		const { target, id } = element.data;
+		const { target, id, key } = element.data;
 		const display = Array.isArray(target)
 			? target.join(", ")
 			: (target as string);
 		super(display);
 		this.tooltip = display;
+		this.key = key!;
 		this.envId = id!;
 		this.command = {
 			command: "vercel.setEnvironment",
 			title: "Set An Environment Variable",
-			arguments: [this.envId],
+			arguments: [{ id: this.envId, key: this.key, editing: "TARGETS" }],
 		};
 	}
 }
@@ -79,16 +82,17 @@ class EnvironmentTarget extends vscode.TreeItem {
 class EnvironmentValue extends vscode.TreeItem {
 	iconPath = new vscode.ThemeIcon("gear");
 	envId: string;
-
+	key: string;
 	constructor(element: EnvironmentItem) {
-		const { value, id } = element.data;
+		const { value, id, key } = element.data;
 		super(value!);
 		this.tooltip = value;
 		this.envId = id!;
+		this.key = key!;
 		this.command = {
 			command: "vercel.setEnvironment",
 			title: "Set An Environment Variable",
-			arguments: [this.envId],
+			arguments: [{ id: this.envId, key: this.key, editing: "VALUE" }],
 		};
 	}
 }

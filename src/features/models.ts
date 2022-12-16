@@ -86,11 +86,12 @@ type Pagination = {
 	next: number; //Timestamp that must be used to request the next page.
 	prev: number; //Timestamp that must be used to request the previous page.
 };
+type targets =
+	| ("production" | "preview" | "development" | "preview" | "development")[]
+	| ("production" | "preview" | "development" | "preview" | "development");
 
 export type VercelEnvironmentInformation = {
-	target?:
-		| ("production" | "preview" | "development" | "preview" | "development")[]
-		| ("production" | "preview" | "development" | "preview" | "development");
+	target?: targets;
 	type?: "secret" | "system" | "encrypted" | "plain";
 	id?: string;
 	key?: string;
@@ -109,6 +110,12 @@ export type VercelEnvironmentInformation = {
 	system?: boolean;
 };
 export namespace VercelResponse {
+	export type error = {
+		error?: {
+			code: string;
+			message: string;
+		};
+	};
 	export type deployment = {
 		pagination: Pagination;
 		deployments: Deployment[];
@@ -182,7 +189,7 @@ export namespace VercelResponse {
 			protectionBypass?: { [key: string]: string };
 		};
 		/** Data for the currently authenticated User. */
-		export interface user {
+		export type user = {
 			/** UNIX timestamp (in milliseconds) when the User account was created. */
 			createdAt: number;
 			/** When the User account has been "soft blocked", this property will contain the date when the restriction was enacted, and the identifier for why. */
@@ -495,7 +502,7 @@ export namespace VercelResponse {
 			username: string;
 			/** SHA1 hash of the avatar for the User account. Can be used in conjuction with the ... endpoint to retrieve the avatar image. */
 			avatar: string | null;
-		}
+		};
 	}
 }
 /** @memberof VercelResponse.info.project */

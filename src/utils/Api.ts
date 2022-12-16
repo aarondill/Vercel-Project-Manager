@@ -1,5 +1,7 @@
 import fetch, { RequestInit, Response } from "node-fetch";
 import urlcat, { ParamMap } from "urlcat";
+import { window } from "vscode";
+import { VercelResponse } from "../features/models";
 
 export class Api {
 	/** Combines two objects, combining any object properties down one level
@@ -47,16 +49,25 @@ export class Api {
 		const path = initial.path;
 		//> Returns a function for fetching
 		return async (
-			userOpt: ParamMap,
-			userFetchOpt?: RequestInit
+			options: ParamMap,
+			fetchOptions?: RequestInit
 		): Promise<Response> => {
-			const opt = { ...initOpt, ...userOpt };
-			const fetchOpt = this.mergeHeaders(
+			const finalOptions = { ...initOpt, ...options };
+			const finalFetchOptions: RequestInit = this.mergeHeaders(
 				initFetchOpt as {},
-				userFetchOpt as {}
+				fetchOptions as {}
 			);
-			const url = this.base(path, opt);
-			return fetch(url, fetchOpt);
+			const url = this.base(path, finalOptions);
+			const response = await fetch(url, finalFetchOptions);
+
+			//> Check for error and tell user
+			const responseClone = response.clone();
+			const data = (await responseClone.json()) as VercelResponse.error;
+			if ("error" in data)
+				window.showErrorMessage("Error: " + data?.error?.message);
+
+			//> return original response
+			return response;
 		};
 	}
 

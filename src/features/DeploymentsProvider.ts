@@ -56,7 +56,7 @@ export class DeploymentsProvider
 			}
 			return items;
 		} else {
-			const res = await this.vercel.getDeployments();
+			const res = await this.vercel.deployments.getAll();
 			return res.map(x => new DeploymentItem(x));
 		}
 	}
