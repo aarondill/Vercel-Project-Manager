@@ -78,8 +78,14 @@ export class TokenManager {
 	}
 
 	async setProject(token: string | undefined) {
-		await this.globalState.update(this.projectKey, token);
-		this.onProjectStateChanged(token);
+		/* 
+		Only call update functions if is actually updated. This is mostly to avoid calling on startup
+		and forcing two requests to vercel if already in linked project directory
+		*/
+		if (token !== this.getProject()) {
+			await this.globalState.update(this.projectKey, token);
+			this.onProjectStateChanged(token);
+		}
 		vscode.commands.executeCommand("setContext", "vercelLinked", !!token);
 		return token;
 	}
