@@ -180,7 +180,8 @@ export class VercelManager {
 	};
 	deployments = {
 		/**
-		 * @returns A list of deployments for the currently selected project and user or empty list if either doesn't exist
+		 * @returns A list of deployments for the currently selected project and
+		 * user or empty list if either doesn't exist
 		 */
 		getAll: async () => {
 			if (this.auth && this.selectedProject) {
