@@ -93,7 +93,7 @@ export class VercelManager {
 		 * @returns an array of environment variables for the current project from vercel,
 		 * or undefined if no project is selected or no user is authenticated
 		 */
-		getAll: async (): Promise<VercelEnvironmentInformation[] | undefined> => {
+		getAll: async (): Promise<VercelEnvironmentInformation[]> => {
 			if (this.auth && this.selectedProject) {
 				const response = await Api.environment.getAll(
 					{
@@ -109,7 +109,7 @@ export class VercelManager {
 				this.envList = r;
 				return r;
 			} else {
-				return undefined;
+				return [];
 			}
 		},
 		/** returns the environment variable list, updating it if null */
