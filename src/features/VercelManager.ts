@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // 👆 because vercel API requires snake_case keys
+import { workspace } from "vscode";
 import { Api } from "../utils/Api";
 import {
 	Deployment,
@@ -19,11 +20,14 @@ export class VercelManager {
 	private userInfo: VercelResponse.info.user | null = null;
 
 	public constructor(private readonly token: TokenManager) {
+		const refreshRate = workspace
+			.getConfiguration("vercel")
+			.get("RefreshRate") as number;
 		setInterval(() => {
 			this.onDidDeploymentsUpdated();
 			this.onDidEnvironmentsUpdated();
-		}, 5 * 60 * 1000); // refresh every 5 mins
-		// TODO Create setting for this refresh rate (default 5 mins)
+		}, (refreshRate ?? 5) * 60 * 1000); // refresh every refreshRate mins
+
 		//retains this value of vercel
 		token.onProjectStateChanged = (id?: string) => {
 			this.onDidDeploymentsUpdated();
@@ -186,8 +190,10 @@ export class VercelManager {
 	private deploymentsList: Deployment[] | null = null;
 	/** returns the environment variable list, updating it if null */
 	async getDeploymentsList() {
+		while (this.fetchingDeployments); //If fetching, wait until done.
 		return this.deploymentsList ?? this.deployments.getAll();
 	}
+	private fetchingDeployments = false;
 	deployments = {
 		/**
 		 * @returns A list of deployments for the currently selected project and
@@ -195,17 +201,25 @@ export class VercelManager {
 		 */
 		getAll: async () => {
 			if (this.auth && this.selectedProject) {
-				const response = await Api.deployments(
-					{
-						projectId: this.selectedProject,
-						limit: 50, //TODO create setting for this limit (default 25, max 200)
-					},
-					this.authHeader
-				);
-				const data = (await response.json()) as VercelResponse.deployment;
-				const r = data.deployments;
-				this.deploymentsList = r;
-				return r;
+				try {
+					this.fetchingDeployments = true;
+					const limit = workspace
+						.getConfiguration("vercel")
+						.get("DeploymentCount") as number;
+					const response = await Api.deployments(
+						{
+							projectId: this.selectedProject,
+							limit: limit ?? 20,
+						},
+						this.authHeader
+					);
+					const data = (await response.json()) as VercelResponse.deployment;
+					const r = data.deployments;
+					this.deploymentsList = r;
+					return r;
+				} finally {
+					this.fetchingDeployments = false;
+				}
 			} else {
 				return [];
 			}

@@ -38,7 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		showCollapseAll: true,
 	});
 
-	//TODO activate status bar icon
+	// activate status bar icon
 	context.subscriptions.push(new StatusBar(vercel));
 
 	context.subscriptions.push(registerCommands(vercel, logPanelManager));
