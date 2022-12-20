@@ -2,6 +2,9 @@
 	"name": "vercel-project-manager-vscode",
 	"displayName": "Vercel Project Manager",
 	"description": "Manage Vercel Projects from VSCode",
+	"repository": {
+		"url": "https://github.com/aarondill/vercel"
+	},
 	"version": "0.0.1",
 	"license": "MIT",
 	"engines": {
