@@ -5,7 +5,7 @@
 	"publisher": "AaronDill",
 	"icon": "resources/icons/vscode-vercel.png",
 	"repository": {
-		"url": "https://github.com/aarondill/vercel"
+		"url": "https://github.com/aarondill/Vercel-Project-Manager"
 	},
 	"version": "0.1.0",
 	"license": "MIT",
