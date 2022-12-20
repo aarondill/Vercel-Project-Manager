@@ -1,9 +1,9 @@
-import { Command } from "../CommandManager";
-import { VercelManager } from "../features/VercelManager";
-import { Terminal } from "../utils/Terminal";
+import { Command } from "../../CommandManager";
+import { VercelManager } from "../../features/VercelManager";
+import { Terminal } from "../../utils/Terminal";
 
-export class CreateLinkToVercel implements Command {
-	public readonly id = "vercel.createLinkToVercel";
+export class VercelDev implements Command {
+	public readonly id = "vercel.dev";
 	constructor(private readonly vercel: VercelManager) {}
 	execute() {
 		const code = [
@@ -14,9 +14,9 @@ export class CreateLinkToVercel implements Command {
 			`while true; do : ; done`,
 			`exit 1`,
 			`fi`,
-			`vercel link -t ${this.vercel.auth ?? ""}`,
+			`vercel dev -t ${this.vercel.auth ?? ""}`,
 		];
 		const terminal = new Terminal("vercel link");
-		terminal.exec({ code, delim: "CONTINUE" });
+		terminal.exec({ code, delim: "CONTINUE" }, true, true, true);
 	}
 }

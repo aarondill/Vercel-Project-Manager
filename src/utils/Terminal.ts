@@ -22,7 +22,7 @@ export class Terminal {
 	}
 	/**
 	 * @param {codeOpts} codeOpts String to execute, or array of strings and action to do upon failure
-	 * @param closeOnInt Whether to close the terminal on interupt signal (^c), default true
+	 * @param closeOnInt Whether to close the terminal on interrupt signal (^c), default true
 	 * @param closeOnSucc Whether to close the terminal on Success, default true
 	 * @param closeOnError Whether to close the terminal on Error, default false
 	 */

@@ -1,5 +1,7 @@
+export { VercelDeploy } from "./cli/VercelDeploy";
+export { VercelDev } from "./cli/VercelDev";
+export { VercelLink } from "./cli/VercelLink";
 export { CopyURL } from "./CopyURL";
-export { CreateLinkToVercel } from "./CreateLinkToVercel";
 export { OpenDeploymentsLink } from "./Deployments/openDeploymentsLink";
 export { OpenLogPanel } from "./Deployments/OpenLogPanel";
 export { RefreshDeployments } from "./Deployments/RefreshDeployments";
@@ -12,4 +14,3 @@ export { SetEnvironment } from "./Environment/setEnvironment";
 export { LogIn } from "./LogIn";
 export { LogOut } from "./LogOut";
 export { OpenURL } from "./OpenURL";
-export { VercelDev } from "./VercelDev";

@@ -11,7 +11,24 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onStartupFinished"
+		"onStartupFinished",
+		"onCommand:vercel.*",
+		"onCommand:vercel.dev",
+		"onCommand:vercel.logIn",
+		"onCommand:vercel.logOut",
+		"onCommand:vercel.openLogPanel",
+		"onCommand:vercel.refreshLogPanel",
+		"onCommand:vercel.openURL",
+		"onCommand:vercel.copyURL",
+		"onCommand:vercel.refreshDeployments",
+		"onCommand:vercel.refreshEnvironment",
+		"onCommand:vercel.setEnvironment",
+		"onCommand:vercel.removeEnvironment",
+		"onCommand:vercel.createEnvironment",
+		"onCommand:vercel.openEnvironmentLink",
+		"onCommand:vercel.openDeploymentsLink",
+		"onCommand:vercel.vercelLink",
+		"onCommand:vercel.deploy"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -110,8 +127,17 @@
 				"icon": "$(link-external)"
 			},
 			{
-				"command": "vercel.createLinkToVercel",
+				"command": "vercel.vercelLink",
 				"title": "Link current workspace to a Vercel project",
+				"category": "Vercel Project Manager",
+				"icon": {
+					"dark": "resources/icons/dark/vercel.svg",
+					"light": "resources/icons/light/vercel.svg"
+				}
+			},
+			{
+				"command": "vercel.deploy",
+				"title": "Deploy working directory to vercel",
 				"category": "Vercel Project Manager",
 				"icon": {
 					"dark": "resources/icons/dark/vercel.svg",
@@ -141,12 +167,12 @@
 			},
 			{
 				"view": "vercel-deployments",
-				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.createLinkToVercel)",
+				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.vercelLink)",
 				"when": "vercelLoggedIn && !vercelLinked"
 			},
 			{
 				"view": "vercel-environment",
-				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.createLinkToVercel)",
+				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.vercelLink)",
 				"when": "vercelLoggedIn && !vercelLinked"
 			}
 		],
@@ -169,7 +195,7 @@
 		"menus": {
 			"commandPalette": [
 				{
-					"command": "vercel.createLinkToVercel",
+					"command": "vercel.vercelLink",
 					"when": "vercelLoggedIn"
 				},
 				{

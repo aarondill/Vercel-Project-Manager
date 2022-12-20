@@ -62,7 +62,8 @@ function registerCommands(
 	commandManager.register(new commands.CreateEnvironment(vercel));
 	commandManager.register(new commands.OpenEnvironmentLink(vercel));
 	commandManager.register(new commands.OpenDeploymentsLink(vercel));
-	commandManager.register(new commands.CreateLinkToVercel(vercel));
+	commandManager.register(new commands.VercelLink(vercel));
+	commandManager.register(new commands.VercelDeploy(vercel));
 	return commandManager;
 }
 export function deactivate() {}
