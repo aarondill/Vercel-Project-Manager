@@ -7,7 +7,7 @@
 	"repository": {
 		"url": "https://github.com/aarondill/vercel"
 	},
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"license": "MIT",
 	"engines": {
 		"vscode": "^1.74.0"
