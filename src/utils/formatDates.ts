@@ -1,4 +1,3 @@
-//* Format Dates like 12/31/2022 10:31 PM
 const dateOptions = {
 	month: "numeric",
 	day: "numeric",
@@ -6,13 +5,13 @@ const dateOptions = {
 	hour: "numeric",
 	minute: "numeric",
 } as Intl.DateTimeFormatOptions;
+/** Format Dates like 12/31/2022 10:31 PM */
 export function formatDate(
 	date: Date,
 	options?: Intl.DateTimeFormatOptions
 ): string {
 	return date.toLocaleDateString("en-US", options ?? dateOptions);
 }
-//* Format Dates like 1 day ago or 23 hours ago
 
 const units: { unit: Intl.RelativeTimeFormatUnit; ms: number }[] = [
 	{ unit: "year", ms: 31536000000 },
@@ -26,6 +25,7 @@ const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
 /**
  * Get language-sensitive relative time message from Dates.
+ * Such as: 1 day ago or 23 hours ago
  * @param relative  - the relative dateTime, generally is in the past or future
  * @param pivot     - the dateTime of reference, generally is the current time
  */

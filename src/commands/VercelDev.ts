@@ -8,12 +8,13 @@ export class VercelDev implements Command {
 	execute() {
 		const code = [
 			`clear && echo "Type cmd/ctrl/meta + c to quit" && echo`,
-			`if [[ -x "$(command -v vercel)" ]]`,
-			`then vercel dev -t "${this.vercel.auth ?? ""}"`,
-			`else echo "The vercel CLI is required for this implementation.` +
-				`\nPlease install with npm install -g vercel" && while true`,
-			`do : ; done`,
+			`if ! command -v vercel &>/dev/null`,
+			`then echo "The vercel CLI is required for this feature.` +
+				`\nPlease install with npm install -g vercel"`,
+			`while true; do : ; done`,
+			`exit 1`,
 			`fi`,
+			`vercel dev -t ${this.vercel.auth ?? ""}`,
 		];
 		const terminal = new Terminal("vercel link");
 		terminal.exec({ code, delim: "CONTINUE" });

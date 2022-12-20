@@ -4,6 +4,7 @@ import * as commands from "./commands";
 import { DeploymentsProvider } from "./features/DeploymentsProvider";
 import { EnvironmentProvider } from "./features/EnvironmentProvider";
 import { LogPanelManager } from "./features/LogPanelManager";
+import { StatusBar } from "./features/StatusBar";
 import { TokenManager } from "./features/TokenManager";
 import { VercelManager } from "./features/VercelManager";
 
@@ -36,6 +37,9 @@ export async function activate(context: vscode.ExtensionContext) {
 		treeDataProvider: environment,
 		showCollapseAll: true,
 	});
+
+	//TODO activate status bar icon
+	context.subscriptions.push(new StatusBar(vercel));
 
 	context.subscriptions.push(registerCommands(vercel, logPanelManager));
 }

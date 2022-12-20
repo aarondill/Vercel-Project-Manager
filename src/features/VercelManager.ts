@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // 👆 because vercel API requires snake_case keys
 import { Api } from "../utils/Api";
-import { VercelEnvironmentInformation, VercelResponse } from "./models";
+import {
+	Deployment,
+	VercelEnvironmentInformation,
+	VercelResponse,
+} from "./models";
 import { TokenManager } from "./TokenManager";
 
 export class VercelManager {
@@ -19,6 +23,7 @@ export class VercelManager {
 			this.onDidDeploymentsUpdated();
 			this.onDidEnvironmentsUpdated();
 		}, 5 * 60 * 1000); // refresh every 5 mins
+		// TODO Create setting for this refresh rate (default 5 mins)
 		//retains this value of vercel
 		token.onProjectStateChanged = (id?: string) => {
 			this.onDidDeploymentsUpdated();
@@ -37,7 +42,7 @@ export class VercelManager {
 	}
 
 	/**
-	 * Unsets authtication and project and calls didLogOut, didDeploymentsUpdated, and didEnvironmentsUpdates;
+	 * Un-sets authentication and project and calls didLogOut, didDeploymentsUpdated, and didEnvironmentsUpdates;
 	 */
 	async logOut() {
 		await this.token.setAuth(undefined);
@@ -142,7 +147,7 @@ export class VercelManager {
 
 		/**
 		 * Deletes an environment variable based on ID
-		 * @param id A string corrisponding to the Vercel ID of the env variable
+		 * @param id A string corresponding to the Vercel ID of the env variable
 		 */
 		remove: async (id: string) => {
 			await Api.environment.remove(
@@ -156,7 +161,7 @@ export class VercelManager {
 		},
 		/**
 		 *
-		 * @param id A string coresponding the ID of the Environment Variable
+		 * @param id A string corresponding the ID of the Environment Variable
 		 * @param value The value to set the Variable to
 		 * @param {("development" | "preview" | "production")[]} targets Deployment targets to set to
 		 */
@@ -178,6 +183,11 @@ export class VercelManager {
 			this.onDidEnvironmentsUpdated();
 		},
 	};
+	private deploymentsList: Deployment[] | null = null;
+	/** returns the environment variable list, updating it if null */
+	async getDeploymentsList() {
+		return this.deploymentsList ?? this.deployments.getAll();
+	}
 	deployments = {
 		/**
 		 * @returns A list of deployments for the currently selected project and
@@ -188,12 +198,14 @@ export class VercelManager {
 				const response = await Api.deployments(
 					{
 						projectId: this.selectedProject,
-						limit: 50, //TODO create setting for this limit
+						limit: 50, //TODO create setting for this limit (default 25, max 200)
 					},
 					this.authHeader
 				);
 				const data = (await response.json()) as VercelResponse.deployment;
-				return data.deployments;
+				const r = data.deployments;
+				this.deploymentsList = r;
+				return r;
 			} else {
 				return [];
 			}
