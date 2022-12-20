@@ -2,6 +2,8 @@
 
 Manage Vercel Projects from the comfort of VSCode
 
+Available on the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=AaronDill.vercel-project-manager-vscode)!
+
 ## Features
 
 - Manage Deployments and view logs in the activity panel
