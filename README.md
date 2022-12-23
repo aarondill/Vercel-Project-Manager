@@ -16,4 +16,4 @@ This extension contributes the following settings:
 
 - `vercel.AccessToken`: Your Vercel Access Token(found at https://vercel.com/account/tokens).
 - `vercel.RefreshRate`: Number of minutes to wait between refreshes of Deployments and Environment.
-- `Vercel.DeploymentCount`: Number of deployments to display from Vercel.
+- `vercel.DeploymentCount`: Number of deployments to display from Vercel.
