@@ -1,9 +1,11 @@
 # Change Log
 
-All notable changes to the "vercel" extension will be documented in this file.
-
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
+## v1.0.0
 
 - Initial release
+
+## v1.1.0
+
+- Removed unnecessary / useless code
+- Improved Readme
+- Added `ext:package` command and improved `lint` command
