@@ -17,13 +17,9 @@
 	],
 	"activationEvents": [
 		"onStartupFinished",
-		"onCommand:vercel.*",
 		"onCommand:vercel.dev",
 		"onCommand:vercel.logIn",
 		"onCommand:vercel.logOut",
-		"onCommand:vercel.openLogPanel",
-		"onCommand:vercel.refreshLogPanel",
-		"onCommand:vercel.openURL",
 		"onCommand:vercel.copyURL",
 		"onCommand:vercel.refreshDeployments",
 		"onCommand:vercel.refreshEnvironment",
@@ -75,23 +71,6 @@
 				"command": "vercel.logOut",
 				"category": "Vercel Project Manager",
 				"title": "Log Out"
-			},
-			{
-				"command": "vercel.openLogPanel",
-				"category": "Vercel Project Manager",
-				"title": "Open Logs"
-			},
-			{
-				"command": "vercel.refreshLogPanel",
-				"category": "Vercel Project Manager",
-				"title": "Refresh Active Log Panel",
-				"icon": "$(extensions-refresh)"
-			},
-			{
-				"command": "vercel.openURL",
-				"category": "Vercel Project Manager",
-				"title": "Open URL in Browser",
-				"icon": "$(globe)"
 			},
 			{
 				"command": "vercel.copyURL",
@@ -217,18 +196,6 @@
 					"when": "vercelLoggedIn"
 				},
 				{
-					"command": "vercel.openLogPanel",
-					"when": "false"
-				},
-				{
-					"command": "vercel.refreshLogPanel",
-					"when": "false"
-				},
-				{
-					"command": "vercel.openURL",
-					"when": "false"
-				},
-				{
 					"command": "vercel.copyURL",
 					"when": "false"
 				},
@@ -293,19 +260,7 @@
 					"group": "navigation"
 				}
 			],
-			"editor/title": [
-				{
-					"command": "vercel.refreshLogPanel",
-					"when": "vercelLogViewFocus",
-					"group": "navigation@1"
-				}
-			],
 			"view/item/context": [
-				{
-					"command": "vercel.openURL",
-					"when": "view == vercel-deployments && viewItem == deploymentLog",
-					"group": "inline@1"
-				},
 				{
 					"command": "vercel.copyURL",
 					"when": "view == vercel-deployments && viewItem == deployment || viewItem == deploymentLog",

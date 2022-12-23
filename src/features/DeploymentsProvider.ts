@@ -35,12 +35,7 @@ export class DeploymentsProvider
 		if (element) {
 			const items = [
 				new DeploymentOpenUrlItem(element.data.url),
-				new DeploymentViewLogItem(
-					element.data.uid,
-					element.data.name,
-					element.data.url,
-					element.data.state!
-				),
+				new DeploymentViewLogItem(element.data.url, element.data.state!),
 			];
 			if (element.data.meta && Object.keys(element.data.meta).length !== 0) {
 				const commit = getCommit(element.data.meta);
@@ -135,14 +130,14 @@ class DeploymentViewLogItem extends vscode.TreeItem {
 	contextValue = "deploymentLog";
 	url: string;
 
-	constructor(id: string, name: string, url: string, state: string) {
+	constructor(url: string, state: string) {
 		super("View Logs");
 		this.description = state.toLowerCase();
-		this.url = "https://" + url + "/_logs";
+		this.url = "https://" + url + "/_logs#L1";
 		this.command = {
-			command: "vercel.openLogPanel",
-			title: "View Vercel Logs",
-			arguments: [id, name, state],
+			command: "vscode.open",
+			title: "Open Vercel Logs",
+			arguments: [vscode.Uri.parse(this.url)],
 		};
 	}
 }

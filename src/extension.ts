@@ -3,7 +3,6 @@ import { CommandManager } from "./CommandManager";
 import * as commands from "./commands";
 import { DeploymentsProvider } from "./features/DeploymentsProvider";
 import { EnvironmentProvider } from "./features/EnvironmentProvider";
-import { LogPanelManager } from "./features/LogPanelManager";
 import { StatusBar } from "./features/StatusBar";
 import { TokenManager } from "./features/TokenManager";
 import { VercelManager } from "./features/VercelManager";
@@ -18,15 +17,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	const vercel = new VercelManager(token);
 
 	const deployments = new DeploymentsProvider(vercel);
-	const logPanelManager = new LogPanelManager(vercel, context, token);
 	const environment = new EnvironmentProvider(vercel);
-
-	context.subscriptions.push(
-		vscode.window.registerWebviewPanelSerializer(
-			"vercel.logView",
-			logPanelManager
-		)
-	);
 
 	vscode.window.createTreeView("vercel-deployments", {
 		treeDataProvider: deployments,
@@ -41,18 +32,12 @@ export async function activate(context: vscode.ExtensionContext) {
 	// activate status bar icon
 	context.subscriptions.push(new StatusBar(vercel));
 
-	context.subscriptions.push(registerCommands(vercel, logPanelManager));
+	context.subscriptions.push(registerCommands(vercel));
 }
-function registerCommands(
-	vercel: VercelManager,
-	logPanelManager: LogPanelManager
-): vscode.Disposable {
+function registerCommands(vercel: VercelManager): vscode.Disposable {
 	const commandManager = new CommandManager();
 	commandManager.register(new commands.LogIn(vercel));
 	commandManager.register(new commands.LogOut(vercel));
-	commandManager.register(new commands.OpenLogPanel(logPanelManager));
-	commandManager.register(new commands.RefreshLogPanel(logPanelManager));
-	commandManager.register(new commands.OpenURL());
 	commandManager.register(new commands.CopyURL());
 	commandManager.register(new commands.RefreshDeployments(vercel));
 	commandManager.register(new commands.VercelDev(vercel));
