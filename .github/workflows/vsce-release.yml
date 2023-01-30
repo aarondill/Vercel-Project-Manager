@@ -17,8 +17,9 @@ jobs:
            npm install
            npm install @vscode/vsce
            npm run ext:package
+           ls
     - name: Upload vsix file to release
       uses: svenstaro/upload-release-action@v2
       with:
-        file: *.vsix
+        file: "*.vsix"
         overwrite: true
