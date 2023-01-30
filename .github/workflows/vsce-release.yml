@@ -1,0 +1,24 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Publish binaries
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Package
+      run: |
+           npm install
+           npm install @vscode/vsce
+           npm run ext:package
+    - name: Upload vsix file to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        file: *.vsix
+        overwrite: true
