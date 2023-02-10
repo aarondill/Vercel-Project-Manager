@@ -1,7 +1,9 @@
-out
 dist
 node_modules
 .vscode-test/
 *.vsix
 .vercel
 *.swp
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
