@@ -1,61 +1,34 @@
 {
 	"name": "vercel-project-manager-vscode",
 	"displayName": "Vercel Project Manager",
-	"description": "Manage Vercel Projects from VSCode",
-	"publisher": "AaronDill",
-	"icon": "resources/icons/vscode-vercel.png",
-	"repository": {
-		"url": "https://github.com/aarondill/Vercel-Project-Manager"
-	},
 	"version": "1.1.1",
-	"license": "MIT",
-	"engines": {
-		"vscode": "^1.74.0"
-	},
+	"private": true,
+	"description": "Manage Vercel Projects from VSCode",
 	"categories": [
 		"Other"
 	],
-	"activationEvents": [
-		"onStartupFinished",
-		"onCommand:vercel.dev",
-		"onCommand:vercel.logIn",
-		"onCommand:vercel.logOut",
-		"onCommand:vercel.copyURL",
-		"onCommand:vercel.refreshDeployments",
-		"onCommand:vercel.refreshEnvironment",
-		"onCommand:vercel.setEnvironment",
-		"onCommand:vercel.removeEnvironment",
-		"onCommand:vercel.createEnvironment",
-		"onCommand:vercel.openEnvironmentLink",
-		"onCommand:vercel.openDeploymentsLink",
-		"onCommand:vercel.vercelLink",
-		"onCommand:vercel.deploy"
-	],
+	"repository": {
+		"url": "https://github.com/aarondill/Vercel-Project-Manager"
+	},
+	"license": "MIT",
+	"publisher": "AaronDill",
 	"main": "./dist/extension.js",
+	"scripts": {
+		"clean": "del-cli dist",
+		"precompile": "npm run clean",
+		"compile": "webpack",
+		"ext:package": "vsce package",
+		"lint": "eslint src --ext .js,.ts --fix",
+		"prepackage": "npm run clean",
+		"package": "webpack --mode production --devtool hidden-source-map",
+		"release": "release-it",
+		"pretest": "npm run lint",
+		"test": "echo 'no tests specified, feel free to define your own and create a PR!' && exit 1",
+		"vscode:prepublish": "npm run package",
+		"prewatch": "npm run clean",
+		"watch": "webpack --watch"
+	},
 	"contributes": {
-		"configuration": {
-			"title": "Vercel Project Manager",
-			"properties": {
-				"vercel.AccessToken": {
-					"type": "string",
-					"default": "",
-					"description": "Your Vercel Access Token(found at https://vercel.com/account/tokens)."
-				},
-				"vercel.RefreshRate": {
-					"type": "number",
-					"default": 5,
-					"exclusiveMinimum": 0,
-					"description": "Number of minutes to wait between refreshes of Deployments and Environment."
-				},
-				"vercel.DeploymentCount": {
-					"type": "number",
-					"default": 20,
-					"minimum": 1,
-					"maximum": 100,
-					"description": "Number of deployments to fetch from Vercel."
-				}
-			}
-		},
 		"commands": [
 			{
 				"command": "vercel.dev",
@@ -142,52 +115,28 @@
 				}
 			}
 		],
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "vercel-sidebar",
-					"title": "Vercel Project Manager",
-					"icon": "resources/icons/dark/vercel.svg"
-				}
-			]
-		},
-		"viewsWelcome": [
-			{
-				"view": "vercel-deployments",
-				"contents": "You have not yet logged in to view deployments.\n[▲ Log In with Vercel](command:vercel.logIn)",
-				"when": "!vercelLoggedIn"
-			},
-			{
-				"view": "vercel-environment",
-				"contents": "You have not yet logged in to view environment variables.\n[▲ Log In with Vercel](command:vercel.logIn)",
-				"when": "!vercelLoggedIn"
-			},
-			{
-				"view": "vercel-deployments",
-				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.vercelLink)",
-				"when": "vercelLoggedIn && !vercelLinked"
-			},
-			{
-				"view": "vercel-environment",
-				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.vercelLink)",
-				"when": "vercelLoggedIn && !vercelLinked"
-			}
-		],
-		"views": {
-			"vercel-sidebar": [
-				{
-					"type": "tree",
-					"id": "vercel-deployments",
-					"name": "Deployments",
-					"visibility": "visible"
+		"configuration": {
+			"title": "Vercel Project Manager",
+			"properties": {
+				"vercel.AccessToken": {
+					"type": "string",
+					"default": "",
+					"description": "Your Vercel Access Token(found at https://vercel.com/account/tokens)."
 				},
-				{
-					"type": "tree",
-					"id": "vercel-environment",
-					"name": "Environment Variables",
-					"visibility": "collapsed"
+				"vercel.RefreshRate": {
+					"type": "number",
+					"default": 5,
+					"exclusiveMinimum": 0,
+					"description": "Number of minutes to wait between refreshes of Deployments and Environment."
+				},
+				"vercel.DeploymentCount": {
+					"type": "number",
+					"default": 20,
+					"minimum": 1,
+					"maximum": 100,
+					"description": "Number of deployments to fetch from Vercel."
 				}
-			]
+			}
 		},
 		"menus": {
 			"commandPalette": [
@@ -272,21 +221,75 @@
 					"group": "inline@1"
 				}
 			]
-		}
+		},
+		"views": {
+			"vercel-sidebar": [
+				{
+					"type": "tree",
+					"id": "vercel-deployments",
+					"name": "Deployments",
+					"visibility": "visible"
+				},
+				{
+					"type": "tree",
+					"id": "vercel-environment",
+					"name": "Environment Variables",
+					"visibility": "collapsed"
+				}
+			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "vercel-sidebar",
+					"title": "Vercel Project Manager",
+					"icon": "resources/icons/dark/vercel.svg"
+				}
+			]
+		},
+		"viewsWelcome": [
+			{
+				"view": "vercel-deployments",
+				"contents": "You have not yet logged in to view deployments.\n[▲ Log In with Vercel](command:vercel.logIn)",
+				"when": "!vercelLoggedIn"
+			},
+			{
+				"view": "vercel-environment",
+				"contents": "You have not yet logged in to view environment variables.\n[▲ Log In with Vercel](command:vercel.logIn)",
+				"when": "!vercelLoggedIn"
+			},
+			{
+				"view": "vercel-deployments",
+				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.vercelLink)",
+				"when": "vercelLoggedIn && !vercelLinked"
+			},
+			{
+				"view": "vercel-environment",
+				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.vercelLink)",
+				"when": "vercelLoggedIn && !vercelLinked"
+			}
+		]
 	},
-	"scripts": {
-		"vscode:prepublish": "npm run package",
-		"ext:package": "vsce package",
-		"precompile": "npm run clean",
-		"compile": "webpack",
-		"prewatch": "npm run clean",
-		"watch": "webpack --watch",
-		"prepackage": "npm run clean",
-		"package": "webpack --mode production --devtool hidden-source-map",
-		"clean": "del-cli dist",
-		"lint": "eslint src --ext .js,.ts --fix",
-		"pretest": "npm run lint",
-		"test": "echo 'no tests specified, feel free to define your own and create a PR!' && exit 1"
+	"activationEvents": [
+		"onStartupFinished",
+		"onCommand:vercel.dev",
+		"onCommand:vercel.logIn",
+		"onCommand:vercel.logOut",
+		"onCommand:vercel.copyURL",
+		"onCommand:vercel.refreshDeployments",
+		"onCommand:vercel.refreshEnvironment",
+		"onCommand:vercel.setEnvironment",
+		"onCommand:vercel.removeEnvironment",
+		"onCommand:vercel.createEnvironment",
+		"onCommand:vercel.openEnvironmentLink",
+		"onCommand:vercel.openDeploymentsLink",
+		"onCommand:vercel.vercelLink",
+		"onCommand:vercel.deploy"
+	],
+	"dependencies": {
+		"node-fetch": "^3.3.1",
+		"timeago.js": "^4.0.2",
+		"urlcat": "^3.1.0"
 	},
 	"devDependencies": {
 		"@types/node": "^18.15.11",
@@ -300,9 +303,8 @@
 		"webpack": "^5.79.0",
 		"webpack-cli": "^5.0.1"
 	},
-	"dependencies": {
-		"node-fetch": "^3.3.1",
-		"timeago.js": "^4.0.2",
-		"urlcat": "^3.1.0"
-	}
+	"engines": {
+		"vscode": "^1.74.0"
+	},
+	"icon": "resources/icons/vscode-vercel.png"
 }
