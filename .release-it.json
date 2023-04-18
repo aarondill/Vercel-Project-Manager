@@ -14,7 +14,7 @@
 	},
 	"hooks": {
 		"before:git:release": "git add . --update",
-		"after:github:release": "vsce publish",
+		"after:github:release": "vsce publish --no-git-tag-version --no-update-package-json",
 		"after:bump": "npx auto-changelog -p"
 	}
 }
