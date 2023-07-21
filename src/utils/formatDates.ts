@@ -1,25 +1,25 @@
 const dateOptions = {
-	month: "numeric",
-	day: "numeric",
-	year: "2-digit",
-	hour: "numeric",
-	minute: "numeric",
+  month: "numeric",
+  day: "numeric",
+  year: "2-digit",
+  hour: "numeric",
+  minute: "numeric",
 } as Intl.DateTimeFormatOptions;
 /** Format Dates like 12/31/2022 10:31 PM */
 export function formatDate(
-	date: Date,
-	options?: Intl.DateTimeFormatOptions
+  date: Date,
+  options?: Intl.DateTimeFormatOptions
 ): string {
-	return date.toLocaleDateString("en-US", options ?? dateOptions);
+  return date.toLocaleDateString("en-US", options ?? dateOptions);
 }
 
 const units: { unit: Intl.RelativeTimeFormatUnit; ms: number }[] = [
-	{ unit: "year", ms: 31536000000 },
-	{ unit: "month", ms: 2628000000 },
-	{ unit: "day", ms: 86400000 },
-	{ unit: "hour", ms: 3600000 },
-	{ unit: "minute", ms: 60000 },
-	{ unit: "second", ms: 1000 },
+  { unit: "year", ms: 31536000000 },
+  { unit: "month", ms: 2628000000 },
+  { unit: "day", ms: 86400000 },
+  { unit: "hour", ms: 3600000 },
+  { unit: "minute", ms: 60000 },
+  { unit: "second", ms: 1000 },
 ];
 const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
@@ -30,14 +30,14 @@ const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
  * @param pivot     - the dateTime of reference, generally is the current time
  */
 export function relativeTimeFromDates(
-	relative: Date | null,
-	pivot: Date = new Date()
+  relative: Date | null,
+  pivot: Date = new Date()
 ): string {
-	if (!relative) {
-		return "";
-	}
-	const elapsed = relative.getTime() - pivot.getTime();
-	return relativeTimeFromElapsed(elapsed);
+  if (!relative) {
+    return "";
+  }
+  const elapsed = relative.getTime() - pivot.getTime();
+  return relativeTimeFromElapsed(elapsed);
 }
 
 /**
@@ -45,10 +45,10 @@ export function relativeTimeFromDates(
  * @param elapsed   - the elapsed time in milliseconds
  */
 export function relativeTimeFromElapsed(elapsed: number): string {
-	for (const { unit, ms } of units) {
-		if (Math.abs(elapsed) >= ms || unit === "second") {
-			return rtf.format(Math.round(elapsed / ms), unit);
-		}
-	}
-	return "";
+  for (const { unit, ms } of units) {
+    if (Math.abs(elapsed) >= ms || unit === "second") {
+      return rtf.format(Math.round(elapsed / ms), unit);
+    }
+  }
+  return "";
 }

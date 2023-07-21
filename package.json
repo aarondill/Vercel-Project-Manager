@@ -1,310 +1,318 @@
 {
-	"name": "vercel-project-manager-vscode",
-	"displayName": "Vercel Project Manager",
-	"version": "1.1.2",
-	"private": true,
-	"description": "Manage Vercel Projects from VSCode",
-	"categories": [
-		"Other"
-	],
-	"repository": {
-		"url": "https://github.com/aarondill/Vercel-Project-Manager"
-	},
-	"license": "MIT",
-	"publisher": "AaronDill",
-	"main": "./dist/extension.js",
-	"scripts": {
-		"clean": "del-cli dist",
-		"precompile": "npm run clean",
-		"compile": "webpack",
-		"ext:package": "vsce package",
-		"lint": "eslint src --ext .js,.ts --fix",
-		"prepackage": "npm run clean",
-		"package": "webpack --mode production --devtool hidden-source-map",
-		"release": "release-it",
-		"pretest": "npm run lint",
-		"test": "echo 'no tests specified, feel free to define your own and create a PR!' && exit 1",
-		"vscode:prepublish": "npm run package",
-		"prewatch": "npm run clean",
-		"watch": "webpack --watch"
-	},
-	"contributes": {
-		"commands": [
-			{
-				"command": "vercel.dev",
-				"category": "Vercel Project Manager",
-				"title": "Run a development server through Vercel"
-			},
-			{
-				"command": "vercel.logIn",
-				"category": "Vercel Project Manager",
-				"title": "Log in"
-			},
-			{
-				"command": "vercel.logOut",
-				"category": "Vercel Project Manager",
-				"title": "Log Out"
-			},
-			{
-				"command": "vercel.copyURL",
-				"category": "Vercel Project Manager",
-				"title": "Copy URL to Clipboard",
-				"icon": {
-					"dark": "resources/icons/dark/copy-to-clipboard.svg",
-					"light": "resources/icons/light/copy-to-clipboard.svg"
-				}
-			},
-			{
-				"command": "vercel.refreshDeployments",
-				"category": "Vercel Project Manager",
-				"title": "Refresh Deployments",
-				"icon": "$(extensions-refresh)"
-			},
-			{
-				"command": "vercel.refreshEnvironment",
-				"category": "Vercel Project Manager",
-				"title": "Refresh Environment Variables",
-				"icon": "$(extensions-refresh)"
-			},
-			{
-				"command": "vercel.setEnvironment",
-				"category": "Vercel Project Manager",
-				"title": "Set Environment Variable",
-				"icon": "$(extensions-wrench)"
-			},
-			{
-				"command": "vercel.removeEnvironment",
-				"title": "Remove Environment Variable",
-				"category": "Vercel Project Manager",
-				"icon": "$(trash)"
-			},
-			{
-				"command": "vercel.createEnvironment",
-				"title": "Create Environment Variable",
-				"category": "Vercel Project Manager",
-				"icon": "$(plus)"
-			},
-			{
-				"command": "vercel.openEnvironmentLink",
-				"title": "Open Environment Setup in Browser",
-				"category": "Vercel Project Manager",
-				"icon": "$(link-external)"
-			},
-			{
-				"command": "vercel.openDeploymentsLink",
-				"title": "Open Deployments in Browser",
-				"category": "Vercel Project Manager",
-				"icon": "$(link-external)"
-			},
-			{
-				"command": "vercel.vercelLink",
-				"title": "Link current workspace to a Vercel project",
-				"category": "Vercel Project Manager",
-				"icon": {
-					"dark": "resources/icons/dark/vercel.svg",
-					"light": "resources/icons/light/vercel.svg"
-				}
-			},
-			{
-				"command": "vercel.deploy",
-				"title": "Deploy working directory to Vercel",
-				"category": "Vercel Project Manager",
-				"icon": {
-					"dark": "resources/icons/dark/vercel.svg",
-					"light": "resources/icons/light/vercel.svg"
-				}
-			}
-		],
-		"configuration": {
-			"title": "Vercel Project Manager",
-			"properties": {
-				"vercel.AccessToken": {
-					"type": "string",
-					"default": "",
-					"description": "Your Vercel Access Token(found at https://vercel.com/account/tokens)."
-				},
-				"vercel.RefreshRate": {
-					"type": "number",
-					"default": 5,
-					"exclusiveMinimum": 0,
-					"description": "Number of minutes to wait between refreshes of Deployments and Environment."
-				},
-				"vercel.DeploymentCount": {
-					"type": "number",
-					"default": 20,
-					"minimum": 1,
-					"maximum": 100,
-					"description": "Number of deployments to fetch from Vercel."
-				}
-			}
-		},
-		"menus": {
-			"commandPalette": [
-				{
-					"command": "vercel.vercelLink",
-					"when": "vercelLoggedIn"
-				},
-				{
-					"command": "vercel.copyURL",
-					"when": "false"
-				},
-				{
-					"command": "vercel.dev"
-				},
-				{
-					"command": "vercel.logIn"
-				},
-				{
-					"command": "vercel.logOut",
-					"when": "vercelLoggedIn"
-				},
-				{
-					"command": "vercel.refreshDeployments",
-					"when": "vercelLoggedIn && vercelLinked"
-				},
-				{
-					"command": "vercel.refreshEnvironment",
-					"when": "vercelLoggedIn && vercelLinked"
-				},
-				{
-					"command": "vercel.setEnvironment",
-					"when": "vercelLoggedIn && vercelLinked"
-				},
-				{
-					"command": "vercel.removeEnvironment",
-					"when": "vercelLoggedIn && vercelLinked"
-				},
-				{
-					"command": "vercel.createEnvironment",
-					"when": "vercelLoggedIn && vercelLinked"
-				},
-				{
-					"command": "vercel.openEnvironmentLink",
-					"when": "vercelLoggedIn && vercelLinked"
-				},
-				{
-					"command": "vercel.openDeploymentsLink",
-					"when": "vercelLoggedIn && vercelLinked"
-				}
-			],
-			"view/title": [
-				{
-					"command": "vercel.refreshDeployments",
-					"when": "view == vercel-deployments && vercelLinked",
-					"group": "navigation"
-				},
-				{
-					"command": "vercel.openDeploymentsLink",
-					"when": "view == vercel-deployments && vercelLinked",
-					"group": "navigation"
-				},
-				{
-					"command": "vercel.refreshEnvironment",
-					"when": "view == vercel-environment && vercelLinked",
-					"group": "navigation"
-				},
-				{
-					"command": "vercel.openEnvironmentLink",
-					"when": "view == vercel-environment && vercelLinked",
-					"group": "navigation"
-				}
-			],
-			"view/item/context": [
-				{
-					"command": "vercel.copyURL",
-					"when": "view == vercel-deployments && viewItem == deployment || viewItem == deploymentLog",
-					"group": "inline@2"
-				},
-				{
-					"command": "vercel.removeEnvironment",
-					"when": "view == vercel-environment && viewItem == Environment && vercelLinked",
-					"group": "inline@1"
-				}
-			]
-		},
-		"views": {
-			"vercel-sidebar": [
-				{
-					"type": "tree",
-					"id": "vercel-deployments",
-					"name": "Deployments",
-					"visibility": "visible"
-				},
-				{
-					"type": "tree",
-					"id": "vercel-environment",
-					"name": "Environment Variables",
-					"visibility": "collapsed"
-				}
-			]
-		},
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "vercel-sidebar",
-					"title": "Vercel Project Manager",
-					"icon": "resources/icons/dark/vercel.svg"
-				}
-			]
-		},
-		"viewsWelcome": [
-			{
-				"view": "vercel-deployments",
-				"contents": "You have not yet logged in to view deployments.\n[▲ Log In with Vercel](command:vercel.logIn)",
-				"when": "!vercelLoggedIn"
-			},
-			{
-				"view": "vercel-environment",
-				"contents": "You have not yet logged in to view environment variables.\n[▲ Log In with Vercel](command:vercel.logIn)",
-				"when": "!vercelLoggedIn"
-			},
-			{
-				"view": "vercel-deployments",
-				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.vercelLink)",
-				"when": "vercelLoggedIn && !vercelLinked"
-			},
-			{
-				"view": "vercel-environment",
-				"contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.vercelLink)",
-				"when": "vercelLoggedIn && !vercelLinked"
-			}
-		]
-	},
-	"activationEvents": [
-		"onStartupFinished",
-		"onCommand:vercel.dev",
-		"onCommand:vercel.logIn",
-		"onCommand:vercel.logOut",
-		"onCommand:vercel.copyURL",
-		"onCommand:vercel.refreshDeployments",
-		"onCommand:vercel.refreshEnvironment",
-		"onCommand:vercel.setEnvironment",
-		"onCommand:vercel.removeEnvironment",
-		"onCommand:vercel.createEnvironment",
-		"onCommand:vercel.openEnvironmentLink",
-		"onCommand:vercel.openDeploymentsLink",
-		"onCommand:vercel.vercelLink",
-		"onCommand:vercel.deploy"
-	],
-	"dependencies": {
-		"node-fetch": "^3.3.1",
-		"timeago.js": "^4.0.2",
-		"urlcat": "^3.1.0"
-	},
-	"devDependencies": {
-		"@types/node": "^18.15.11",
-		"@types/vscode": "^1.77.0",
-		"@typescript-eslint/eslint-plugin": "^5.59.0",
-		"@typescript-eslint/parser": "^5.59.0",
-		"del-cli": "^5.0.0",
-		"eslint": "^8.38.0",
-		"ts-loader": "^9.4.2",
-		"typescript": "^5.0.4",
-		"webpack": "^5.79.0",
-		"webpack-cli": "^5.0.1"
-	},
-	"engines": {
-		"vscode": "^1.77.0"
-	},
-	"icon": "resources/icons/vscode-vercel.png"
+  "name": "vercel-project-manager-vscode",
+  "displayName": "Vercel Project Manager",
+  "version": "1.1.2",
+  "private": true,
+  "description": "Manage Vercel Projects from VSCode",
+  "categories": [
+    "Other"
+  ],
+  "repository": {
+    "url": "https://github.com/aarondill/Vercel-Project-Manager"
+  },
+  "license": "MIT",
+  "publisher": "AaronDill",
+  "main": "./dist/extension.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "precompile": "npm run clean",
+    "compile": "webpack",
+    "ext:package": "vsce package",
+    "lint": "yarpm run lint:eslint && yarpm run lint:prettier && yarpm run sort-package",
+    "lint:eslint": "eslint . --fix --cache",
+    "lint:prettier": "prettier . --write --loglevel warn",
+    "prepackage": "npm run clean",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "release": "yarpm run lint && yarpm run release:release-it",
+    "release:release-it": "release-it",
+    "pretest": "npm run lint",
+    "prepublishOnly": "yarpm run build",
+    "test": "echo 'no tests specified, feel free to define your own and create a PR!' && exit 0",
+    "vscode:prepublish": "npm run package",
+    "prewatch": "npm run clean",
+    "watch": "webpack --watch",
+    "sort-package": "sort-package-json"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "vercel.dev",
+        "category": "Vercel Project Manager",
+        "title": "Run a development server through Vercel"
+      },
+      {
+        "command": "vercel.logIn",
+        "category": "Vercel Project Manager",
+        "title": "Log in"
+      },
+      {
+        "command": "vercel.logOut",
+        "category": "Vercel Project Manager",
+        "title": "Log Out"
+      },
+      {
+        "command": "vercel.copyURL",
+        "category": "Vercel Project Manager",
+        "title": "Copy URL to Clipboard",
+        "icon": {
+          "dark": "resources/icons/dark/copy-to-clipboard.svg",
+          "light": "resources/icons/light/copy-to-clipboard.svg"
+        }
+      },
+      {
+        "command": "vercel.refreshDeployments",
+        "category": "Vercel Project Manager",
+        "title": "Refresh Deployments",
+        "icon": "$(extensions-refresh)"
+      },
+      {
+        "command": "vercel.refreshEnvironment",
+        "category": "Vercel Project Manager",
+        "title": "Refresh Environment Variables",
+        "icon": "$(extensions-refresh)"
+      },
+      {
+        "command": "vercel.setEnvironment",
+        "category": "Vercel Project Manager",
+        "title": "Set Environment Variable",
+        "icon": "$(extensions-wrench)"
+      },
+      {
+        "command": "vercel.removeEnvironment",
+        "title": "Remove Environment Variable",
+        "category": "Vercel Project Manager",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "vercel.createEnvironment",
+        "title": "Create Environment Variable",
+        "category": "Vercel Project Manager",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "vercel.openEnvironmentLink",
+        "title": "Open Environment Setup in Browser",
+        "category": "Vercel Project Manager",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "vercel.openDeploymentsLink",
+        "title": "Open Deployments in Browser",
+        "category": "Vercel Project Manager",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "vercel.vercelLink",
+        "title": "Link current workspace to a Vercel project",
+        "category": "Vercel Project Manager",
+        "icon": {
+          "dark": "resources/icons/dark/vercel.svg",
+          "light": "resources/icons/light/vercel.svg"
+        }
+      },
+      {
+        "command": "vercel.deploy",
+        "title": "Deploy working directory to Vercel",
+        "category": "Vercel Project Manager",
+        "icon": {
+          "dark": "resources/icons/dark/vercel.svg",
+          "light": "resources/icons/light/vercel.svg"
+        }
+      }
+    ],
+    "configuration": {
+      "title": "Vercel Project Manager",
+      "properties": {
+        "vercel.AccessToken": {
+          "type": "string",
+          "default": "",
+          "description": "Your Vercel Access Token(found at https://vercel.com/account/tokens)."
+        },
+        "vercel.RefreshRate": {
+          "type": "number",
+          "default": 5,
+          "exclusiveMinimum": 0,
+          "description": "Number of minutes to wait between refreshes of Deployments and Environment."
+        },
+        "vercel.DeploymentCount": {
+          "type": "number",
+          "default": 20,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Number of deployments to fetch from Vercel."
+        }
+      }
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "vercel.vercelLink",
+          "when": "vercelLoggedIn"
+        },
+        {
+          "command": "vercel.copyURL",
+          "when": "false"
+        },
+        {
+          "command": "vercel.dev"
+        },
+        {
+          "command": "vercel.logIn"
+        },
+        {
+          "command": "vercel.logOut",
+          "when": "vercelLoggedIn"
+        },
+        {
+          "command": "vercel.refreshDeployments",
+          "when": "vercelLoggedIn && vercelLinked"
+        },
+        {
+          "command": "vercel.refreshEnvironment",
+          "when": "vercelLoggedIn && vercelLinked"
+        },
+        {
+          "command": "vercel.setEnvironment",
+          "when": "vercelLoggedIn && vercelLinked"
+        },
+        {
+          "command": "vercel.removeEnvironment",
+          "when": "vercelLoggedIn && vercelLinked"
+        },
+        {
+          "command": "vercel.createEnvironment",
+          "when": "vercelLoggedIn && vercelLinked"
+        },
+        {
+          "command": "vercel.openEnvironmentLink",
+          "when": "vercelLoggedIn && vercelLinked"
+        },
+        {
+          "command": "vercel.openDeploymentsLink",
+          "when": "vercelLoggedIn && vercelLinked"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "vercel.refreshDeployments",
+          "when": "view == vercel-deployments && vercelLinked",
+          "group": "navigation"
+        },
+        {
+          "command": "vercel.openDeploymentsLink",
+          "when": "view == vercel-deployments && vercelLinked",
+          "group": "navigation"
+        },
+        {
+          "command": "vercel.refreshEnvironment",
+          "when": "view == vercel-environment && vercelLinked",
+          "group": "navigation"
+        },
+        {
+          "command": "vercel.openEnvironmentLink",
+          "when": "view == vercel-environment && vercelLinked",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "vercel.copyURL",
+          "when": "view == vercel-deployments && viewItem == deployment || viewItem == deploymentLog",
+          "group": "inline@2"
+        },
+        {
+          "command": "vercel.removeEnvironment",
+          "when": "view == vercel-environment && viewItem == Environment && vercelLinked",
+          "group": "inline@1"
+        }
+      ]
+    },
+    "views": {
+      "vercel-sidebar": [
+        {
+          "type": "tree",
+          "id": "vercel-deployments",
+          "name": "Deployments",
+          "visibility": "visible"
+        },
+        {
+          "type": "tree",
+          "id": "vercel-environment",
+          "name": "Environment Variables",
+          "visibility": "collapsed"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vercel-sidebar",
+          "title": "Vercel Project Manager",
+          "icon": "resources/icons/dark/vercel.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "vercel-deployments",
+        "contents": "You have not yet logged in to view deployments.\n[▲ Log In with Vercel](command:vercel.logIn)",
+        "when": "!vercelLoggedIn"
+      },
+      {
+        "view": "vercel-environment",
+        "contents": "You have not yet logged in to view environment variables.\n[▲ Log In with Vercel](command:vercel.logIn)",
+        "when": "!vercelLoggedIn"
+      },
+      {
+        "view": "vercel-deployments",
+        "contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.vercelLink)",
+        "when": "vercelLoggedIn && !vercelLinked"
+      },
+      {
+        "view": "vercel-environment",
+        "contents": "You have not yet linked your project to Vercel.\n[▲ Link to Vercel](command:vercel.vercelLink)",
+        "when": "vercelLoggedIn && !vercelLinked"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:vercel.dev",
+    "onCommand:vercel.logIn",
+    "onCommand:vercel.logOut",
+    "onCommand:vercel.copyURL",
+    "onCommand:vercel.refreshDeployments",
+    "onCommand:vercel.refreshEnvironment",
+    "onCommand:vercel.setEnvironment",
+    "onCommand:vercel.removeEnvironment",
+    "onCommand:vercel.createEnvironment",
+    "onCommand:vercel.openEnvironmentLink",
+    "onCommand:vercel.openDeploymentsLink",
+    "onCommand:vercel.vercelLink",
+    "onCommand:vercel.deploy"
+  ],
+  "dependencies": {
+    "node-fetch": "^3.3.1",
+    "timeago.js": "^4.0.2",
+    "urlcat": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.11",
+    "@types/vscode": "^1.77.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.0",
+    "@typescript-eslint/parser": "^5.59.0",
+    "eslint": "^8.38.0",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.4",
+    "webpack": "^5.79.0",
+    "webpack-cli": "^5.0.1",
+    "prettier": "^2.8.8",
+    "rimraf": "^5.0.0",
+    "sort-package-json": "^2.4.1",
+    "yarpm": "^1.2.0"
+  },
+  "engines": {
+    "vscode": "^1.77.0"
+  },
+  "icon": "resources/icons/vscode-vercel.png"
 }
