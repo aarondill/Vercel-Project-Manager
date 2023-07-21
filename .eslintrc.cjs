@@ -200,7 +200,9 @@ const tsRules = {
   "@typescript-eslint/no-unused-vars": [
     "warn",
     {
-      varsIgnorePattern: "_.*",
+      argsIgnorePattern: "^_",
+      varsIgnorePattern: "^_",
+      caughtErrorsIgnorePattern: "^_",
     },
   ],
   "@typescript-eslint/no-use-before-define": [
