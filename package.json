@@ -20,7 +20,7 @@
     "ext:package": "vsce package",
     "lint": "yarpm run lint:eslint && yarpm run lint:prettier && yarpm run sort-package",
     "lint:eslint": "eslint . --fix --cache",
-    "lint:prettier": "prettier . --write --loglevel warn",
+    "lint:prettier": "prettier . --write --log-level warn",
     "prepackage": "npm run clean",
     "package": "webpack --mode production --devtool hidden-source-map",
     "prepublishOnly": "yarpm run build",
