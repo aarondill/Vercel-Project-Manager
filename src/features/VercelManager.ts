@@ -23,10 +23,13 @@ export class VercelManager {
     const refreshRate = workspace
       .getConfiguration("vercel")
       .get("RefreshRate") as number;
-    setInterval(() => {
-      this.onDidDeploymentsUpdated();
-      this.onDidEnvironmentsUpdated();
-    }, (refreshRate ?? 5) * 60 * 1000); // refresh every refreshRate mins
+    setInterval(
+      () => {
+        this.onDidDeploymentsUpdated();
+        this.onDidEnvironmentsUpdated();
+      },
+      (refreshRate ?? 5) * 60 * 1000
+    ); // refresh every refreshRate mins
 
     //retains this value of vercel
     token.onProjectStateChanged = (_id?: string) => {
