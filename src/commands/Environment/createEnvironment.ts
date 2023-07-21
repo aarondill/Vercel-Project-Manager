@@ -14,13 +14,16 @@ export class CreateEnvironment implements Command {
     //> Get key from user
     const key = await window.showInputBox({
       placeHolder: "Key for environment variable",
-      validateInput: value =>
-        (value.match(/[^a-zA-Z\d_]/) &&
-          "Only letters, digits, and underscores are allowed.") ||
-        (value.match(/^[^a-zA-Z]/) && "The name should start with a letter.") ||
-        (envlist.includes(value) &&
-          `${value} already exists. Use set environment to change it's value`) ||
-        null,
+      validateInput: function (value) {
+        if (value.match(/[^a-zA-Z\d_]/)) {
+          return "Only letters, digits, and underscores are allowed.";
+        } else if (value.match(/^[^a-zA-Z]/)) {
+          return "The name should start with a letter.";
+        } else if (envlist.includes(value)) {
+          return `${value} already exists. Use set environment to change it's value`;
+        }
+        return null;
+      },
       title: "Creating Environment Variable",
     });
     //> Empty keys are disallowed
