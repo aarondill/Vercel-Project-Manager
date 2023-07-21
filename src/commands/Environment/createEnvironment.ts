@@ -9,7 +9,8 @@ export class CreateEnvironment implements Command {
   async execute() {
     if (!(this.vercel.auth && this.vercel.selectedProject)) return;
 
-    const envlist = (await this.vercel.env.getEnvList())!.map(x => x.key);
+    const envlist = (await this.vercel.env.getEnvList())?.map(x => x.key);
+    if (!envlist) throw new Error("Failed to get environment list");
     //> Get key from user
     const key = await window.showInputBox({
       placeHolder: "Key for environment variable",

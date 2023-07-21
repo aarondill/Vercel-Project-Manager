@@ -117,7 +117,7 @@ export class VercelManager {
         const data =
           (await response.json()) as VercelResponse.environment.getAll;
         let r = undefined;
-        if ("envs" in data) r = data.envs;
+        if ("envs" in data) r = data.envs || [];
         else r = [data];
         this.envList = r;
         return r;
@@ -217,7 +217,7 @@ export class VercelManager {
             this.authHeader
           );
           const data = (await response.json()) as VercelResponse.deployment;
-          const r = data.deployments;
+          const r = data.deployments ?? [];
           this.deploymentsList = r;
           return r;
         } finally {

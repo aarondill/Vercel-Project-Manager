@@ -8,7 +8,7 @@ export class SetEnvironment implements Command {
   constructor(private readonly vercel: VercelManager) {}
   private async getIdFromUser(envList: VercelEnvironmentInformation[]) {
     const key = await window.showQuickPick(
-      envList.map(e => e.key!),
+      envList.map(e => e.key).filter(Boolean) as string[],
       {
         placeHolder: "key",
         title: "Pick one to edit:",
@@ -98,7 +98,8 @@ export class SetEnvironment implements Command {
       targets = initialTargets;
     }
     //> Return if canceled
-    if (targets === undefined || targets.length === 0) return;
+    if (targets === undefined || targets === null || targets.length === 0)
+      return;
 
     //> edit the env by **ID**, new value and targets
     await this.vercel.env.edit(

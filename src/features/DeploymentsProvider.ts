@@ -174,7 +174,7 @@ export class DeploymentsProvider
       }
       return items;
     }
-    const res = await this.vercel.deployments.getAll();
+    const res = (await this.vercel.deployments.getAll()) ?? [];
     return res.map(x => new DeploymentItem(x));
   }
 }
