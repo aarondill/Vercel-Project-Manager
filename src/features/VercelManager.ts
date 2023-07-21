@@ -2,12 +2,12 @@
 // 👆 because vercel API requires snake_case keys
 import { workspace } from "vscode";
 import { Api } from "../utils/Api";
+import type { TokenManager } from "./TokenManager";
 import type {
   Deployment,
   VercelEnvironmentInformation,
   VercelResponse,
 } from "./models";
-import type { TokenManager } from "./TokenManager";
 
 export class VercelManager {
   public onDidEnvironmentsUpdated: () => void = () => {};
