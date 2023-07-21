@@ -23,15 +23,15 @@
     "lint:prettier": "prettier . --write --loglevel warn",
     "prepackage": "npm run clean",
     "package": "webpack --mode production --devtool hidden-source-map",
+    "prepublishOnly": "yarpm run build",
     "release": "yarpm run lint && yarpm run release:release-it",
     "release:release-it": "release-it",
+    "sort-package": "sort-package-json",
     "pretest": "npm run lint",
-    "prepublishOnly": "yarpm run build",
     "test": "echo 'no tests specified, feel free to define your own and create a PR!' && exit 0",
     "vscode:prepublish": "npm run package",
     "prewatch": "npm run clean",
-    "watch": "webpack --watch",
-    "sort-package": "sort-package-json"
+    "watch": "webpack --watch"
   },
   "contributes": {
     "commands": [
@@ -302,13 +302,13 @@
     "@typescript-eslint/eslint-plugin": "^5.59.0",
     "@typescript-eslint/parser": "^5.59.0",
     "eslint": "^8.38.0",
+    "prettier": "^2.8.8",
+    "rimraf": "^5.0.0",
+    "sort-package-json": "^2.4.1",
     "ts-loader": "^9.4.2",
     "typescript": "^5.0.4",
     "webpack": "^5.79.0",
     "webpack-cli": "^5.0.1",
-    "prettier": "^2.8.8",
-    "rimraf": "^5.0.0",
-    "sort-package-json": "^2.4.1",
     "yarpm": "^1.2.0"
   },
   "engines": {
