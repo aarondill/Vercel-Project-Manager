@@ -9,6 +9,6 @@ export class OpenEnvironmentLink implements Command {
     const projectInfo = await this.vercel.project.getInfo();
     const user = await this.vercel.user.getInfo();
     const url = `https://vercel.com/${user.username}/${projectInfo.name}/settings/environment-variables`;
-    vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(url));
+    await vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(url));
   }
 }

@@ -9,9 +9,8 @@ import { VercelManager } from "./features/VercelManager";
 
 export async function activate(context: vscode.ExtensionContext) {
   const token = new TokenManager(context.globalState, {
-    onAuthStateChanged: state => {
-      vscode.commands.executeCommand("setContext", "vercelLoggedIn", state);
-    },
+    onAuthStateChanged: state =>
+      vscode.commands.executeCommand("setContext", "vercelLoggedIn", state),
   });
 
   const vercel = new VercelManager(token);

@@ -1,14 +1,13 @@
 import type { QuickPickItem } from "vscode";
 import { window } from "vscode";
 import type { Command } from "../../CommandManager";
-import type { VercelEnvironmentInformation } from "../../features/models";
 import type { VercelManager } from "../../features/VercelManager";
 
 /** Returns true if the user confirms the deletion */
 async function confirm(key: string) {
   const warning = `Are you sure you want to delete the environment variable ${key}? This is not reversable.`;
   // Typescript got very confused here, even though it's perfectly valid.
-  // @ts-expect-error
+  // @ts-expect-error It doesn't believe a string array is permitted, but in reality, it is.
   const confirm = (await window.showQuickPick(["No", "Yes"], {
     title: warning,
     placeholder: warning,

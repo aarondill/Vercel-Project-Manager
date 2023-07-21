@@ -29,9 +29,17 @@ export class StatusBar {
     this.tooltip = "Loading Vercel deployment status...";
     this.statusIcon.show();
     this.statusIcon.command = "workbench.view.extension.vercel-sidebar";
-    this.updateStatus();
+    this.updateStatus().catch(err =>
+      console.error(
+        `something went wrong while updating the status bar: ${String(err)}`
+      )
+    );
     this.interval = setInterval(() => {
-      this.updateStatus();
+      this.updateStatus().catch(err =>
+        console.error(
+          `something went wrong while updating the status bar: ${String(err)}`
+        )
+      );
     }, 10 * 1000); //refresh every 10 secs
   }
 

@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 export interface Command {
   readonly id: string;
-  execute(...args: any[]): void;
+  execute(...args: any[]): Thenable<void>;
 }
 
 export class CommandManager {

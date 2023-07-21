@@ -70,6 +70,6 @@ export class CreateEnvironment implements Command {
     if (!targetsChoices || targetsChoices.length === 0) return;
     const targets = targetsChoices.map(x => x.label.toLowerCase());
 
-    this.vercel.env.create(key, value, targets);
+    await this.vercel.env.create(key, value, targets);
   }
 }

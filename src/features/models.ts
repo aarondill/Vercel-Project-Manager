@@ -172,7 +172,7 @@ export namespace VercelResponse {
       live?: boolean;
       enablePreviewFeedback?: boolean | null;
       /** Some things go here */
-      permissions?: {};
+      permissions?: Record<PropertyKey, unknown>;
       lastRollbackTarget?: {
         fromDeploymentId: string;
         toDeploymentId: string;

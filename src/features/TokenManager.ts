@@ -15,7 +15,7 @@ export class TokenManager {
     this.fileWatcher = null;
     this.folderWatcher = null;
   }
-  public onDidLogIn() {
+  public async onDidLogIn() {
     /**
      * add file listener (@link https://code.visualstudio.com/api/references/vscode-api#workspace.createFileSystemWatcher )
      * call onLinkedStateChanged on change of .vercel/project.json file.
@@ -39,13 +39,14 @@ export class TokenManager {
     const update = async (path?: vscode.Uri) =>
       await this.setProject(await this.getProjectIdFromJson(path));
 
-    const remove = async (path: vscode.Uri) => await this.setProject(undefined);
+    const remove = async (_path: vscode.Uri) =>
+      await this.setProject(undefined);
 
     this.fileWatcher.onDidChange(update);
     this.fileWatcher.onDidCreate(update);
     this.fileWatcher.onDidDelete(remove);
     this.folderWatcher.onDidDelete(remove);
-    update();
+    await update();
     this.onProjectStateChanged();
   }
 
@@ -65,7 +66,12 @@ export class TokenManager {
     this.onProjectStateChanged = onProjectStateChanged ?? (x => x);
     // initial run
     this.onAuthStateChanged(!!globalState.get(this.authKey));
-    if (this.getAuth()) this.onDidLogIn();
+    if (this.getAuth())
+      this.onDidLogIn().catch(e =>
+        console.error(
+          `something went wrong running the DidLogIn handler: ${String(e)}`
+        )
+      );
   }
 
   setAuth(token: string | undefined) {
@@ -86,7 +92,7 @@ export class TokenManager {
       await this.globalState.update(this.projectKey, token);
       this.onProjectStateChanged(token);
     }
-    vscode.commands.executeCommand("setContext", "vercelLinked", !!token);
+    await vscode.commands.executeCommand("setContext", "vercelLinked", !!token);
     return token;
   }
 

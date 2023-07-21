@@ -5,7 +5,7 @@ import { Terminal } from "../../utils/Terminal";
 export class VercelDeploy implements Command {
   public readonly id = "vercel.deploy";
   constructor(private readonly vercel: VercelManager) {}
-  execute() {
+  async execute() {
     const code = [
       `clear && echo "Type cmd/ctrl/meta + c to quit" && echo`,
       `if ! command -v vercel &>/dev/null`,

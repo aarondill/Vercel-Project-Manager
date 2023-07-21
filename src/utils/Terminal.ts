@@ -42,7 +42,7 @@ export class Terminal {
     } else run = codeOpts;
 
     if (closeOnInt)
-      run = `(trap "exit \$?" INT && ${run} ); ret=$? ; test $ret -eq 130 && exit 0`;
+      run = `(trap "exit \\$?" INT && ${run} ); ret=$? ; test $ret -eq 130 && exit 0`;
     else run = `(${run}); ret=$?`;
 
     if (closeOnSucc) run += ` ; test $ret -eq 0 && exit $ret`;

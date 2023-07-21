@@ -2,46 +2,6 @@ import * as vscode from "vscode";
 import type { VercelEnvironmentInformation } from "./models";
 import type { VercelManager } from "./VercelManager";
 
-export class EnvironmentProvider
-  implements vscode.TreeDataProvider<vscode.TreeItem>
-{
-  private _onDidChangeTreeData: vscode.EventEmitter<undefined> =
-    new vscode.EventEmitter();
-
-  readonly onDidChangeTreeData: vscode.Event<undefined> =
-    this._onDidChangeTreeData.event;
-
-  private refresh() {
-    this._onDidChangeTreeData.fire(undefined);
-  }
-
-  constructor(private readonly vercel: VercelManager) {
-    this.vercel.onDidEnvironmentsUpdated = () => this.refresh();
-  }
-
-  getTreeItem(element: EnvironmentItem): vscode.TreeItem {
-    return element;
-  }
-
-  async getChildren(element?: EnvironmentItem): Promise<vscode.TreeItem[]> {
-    if (element) {
-      const items = [
-        new EnvironmentValue(element),
-        new EnvironmentTarget(element),
-      ];
-      return items;
-    }
-    if (!this.vercel.selectedProject || !this.vercel.auth) return [];
-    const items: vscode.TreeItem[] = [new CreateEnvironment()];
-    const res = await this.vercel.env.getAll();
-    if (res.length > 0) {
-      res.forEach(x => {
-        items.push(new EnvironmentItem(x));
-      });
-    }
-    return items;
-  }
-}
 class EnvironmentItem extends vscode.TreeItem {
   envId: string;
   key: string;
@@ -106,5 +66,46 @@ class CreateEnvironment extends vscode.TreeItem {
       title: "Add An Environment Variable",
       arguments: [],
     };
+  }
+}
+
+export class EnvironmentProvider
+  implements vscode.TreeDataProvider<vscode.TreeItem>
+{
+  private _onDidChangeTreeData: vscode.EventEmitter<undefined> =
+    new vscode.EventEmitter();
+
+  readonly onDidChangeTreeData: vscode.Event<undefined> =
+    this._onDidChangeTreeData.event;
+
+  private refresh() {
+    this._onDidChangeTreeData.fire(undefined);
+  }
+
+  constructor(private readonly vercel: VercelManager) {
+    this.vercel.onDidEnvironmentsUpdated = () => this.refresh();
+  }
+
+  getTreeItem(element: EnvironmentItem): vscode.TreeItem {
+    return element;
+  }
+
+  async getChildren(element?: EnvironmentItem): Promise<vscode.TreeItem[]> {
+    if (element) {
+      const items = [
+        new EnvironmentValue(element),
+        new EnvironmentTarget(element),
+      ];
+      return items;
+    }
+    if (!this.vercel.selectedProject || !this.vercel.auth) return [];
+    const items: vscode.TreeItem[] = [new CreateEnvironment()];
+    const res = await this.vercel.env.getAll();
+    if (res.length > 0) {
+      res.forEach(x => {
+        items.push(new EnvironmentItem(x));
+      });
+    }
+    return items;
   }
 }

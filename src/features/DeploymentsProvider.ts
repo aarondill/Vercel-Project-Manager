@@ -10,52 +10,6 @@ import type { VercelManager } from "./VercelManager";
 
 timeago.register("en_SHORT", enShort);
 
-export class DeploymentsProvider
-  implements vscode.TreeDataProvider<vscode.TreeItem>
-{
-  private _onDidChangeTreeData: vscode.EventEmitter<undefined> =
-    new vscode.EventEmitter();
-
-  readonly onDidChangeTreeData: vscode.Event<undefined> =
-    this._onDidChangeTreeData.event;
-
-  private refresh() {
-    this._onDidChangeTreeData.fire(undefined);
-  }
-
-  constructor(private readonly vercel: VercelManager) {
-    this.vercel.onDidDeploymentsUpdated = () => this.refresh();
-  }
-
-  getTreeItem(element: DeploymentItem): vscode.TreeItem {
-    return element;
-  }
-
-  async getChildren(element?: DeploymentItem): Promise<vscode.TreeItem[]> {
-    if (element) {
-      const items = [
-        new DeploymentOpenUrlItem(element.data.url),
-        new DeploymentViewLogItem(element.data.url, element.data.state!),
-      ];
-      if (element.data.meta && Object.keys(element.data.meta).length !== 0) {
-        const commit = getCommit(element.data.meta);
-
-        if (commit !== null) {
-          items.push(
-            ...[
-              new DeploymentBranchItem(commit),
-              new DeploymentCommitItem(commit),
-            ]
-          );
-        }
-      }
-      return items;
-    }
-    const res = await this.vercel.deployments.getAll();
-    return res.map(x => new DeploymentItem(x));
-  }
-}
-
 class DeploymentItem extends vscode.TreeItem {
   constructor(public readonly data: Deployment) {
     const d = new Date(data.created);
@@ -94,6 +48,7 @@ class DeploymentItem extends vscode.TreeItem {
           new vscode.ThemeColor("charts.gray")
         );
         break;
+      case "INITIALIZING":
       case "BUILDING":
         this.iconPath = new vscode.ThemeIcon(
           "circle-filled",
@@ -102,6 +57,9 @@ class DeploymentItem extends vscode.TreeItem {
         break;
       case "QUEUED":
         this.iconPath = new vscode.ThemeIcon("circle-outline");
+        break;
+      case undefined:
+        this.iconPath = undefined;
         break;
     }
   }
@@ -172,5 +130,51 @@ class DeploymentCommitItem extends vscode.TreeItem {
       title: "Open Git Commit",
       arguments: [vscode.Uri.parse(commit.url)],
     };
+  }
+}
+
+export class DeploymentsProvider
+  implements vscode.TreeDataProvider<vscode.TreeItem>
+{
+  private _onDidChangeTreeData: vscode.EventEmitter<undefined> =
+    new vscode.EventEmitter();
+
+  readonly onDidChangeTreeData: vscode.Event<undefined> =
+    this._onDidChangeTreeData.event;
+
+  private refresh() {
+    this._onDidChangeTreeData.fire(undefined);
+  }
+
+  constructor(private readonly vercel: VercelManager) {
+    this.vercel.onDidDeploymentsUpdated = () => this.refresh();
+  }
+
+  getTreeItem(element: DeploymentItem): vscode.TreeItem {
+    return element;
+  }
+
+  async getChildren(element?: DeploymentItem): Promise<vscode.TreeItem[]> {
+    if (element) {
+      const items = [
+        new DeploymentOpenUrlItem(element.data.url),
+        new DeploymentViewLogItem(element.data.url, element.data.state!),
+      ];
+      if (element.data.meta && Object.keys(element.data.meta).length !== 0) {
+        const commit = getCommit(element.data.meta);
+
+        if (commit !== null) {
+          items.push(
+            ...[
+              new DeploymentBranchItem(commit),
+              new DeploymentCommitItem(commit),
+            ]
+          );
+        }
+      }
+      return items;
+    }
+    const res = await this.vercel.deployments.getAll();
+    return res.map(x => new DeploymentItem(x));
   }
 }

@@ -23,16 +23,13 @@ export class VercelManager {
     const refreshRate = workspace
       .getConfiguration("vercel")
       .get("RefreshRate") as number;
-    setInterval(
-      () => {
-        this.onDidDeploymentsUpdated();
-        this.onDidEnvironmentsUpdated();
-      },
-      (refreshRate ?? 5) * 60 * 1000
-    ); // refresh every refreshRate mins
+    setInterval(() => {
+      this.onDidDeploymentsUpdated();
+      this.onDidEnvironmentsUpdated();
+    }, (refreshRate ?? 5) * 60 * 1000); // refresh every refreshRate mins
 
     //retains this value of vercel
-    token.onProjectStateChanged = (id?: string) => {
+    token.onProjectStateChanged = (_id?: string) => {
       this.onDidDeploymentsUpdated();
       this.onDidEnvironmentsUpdated();
       // force refresh of info on next call.
@@ -45,7 +42,7 @@ export class VercelManager {
     await this.token.setAuth(apiToken);
     this.onDidDeploymentsUpdated();
     this.onDidEnvironmentsUpdated();
-    this.token.onDidLogIn();
+    await this.token.onDidLogIn();
   }
 
   /**
@@ -70,7 +67,11 @@ export class VercelManager {
   }
   /** Utility getter to return the proper fetch options for authentication  */
   private get authHeader() {
-    return { headers: { Authorization: `Bearer ${this.auth}` } };
+    return {
+      headers: {
+        Authorization: `Bearer ${this.auth ?? "Something went wrong"}`,
+      },
+    };
   }
 
   project = {
