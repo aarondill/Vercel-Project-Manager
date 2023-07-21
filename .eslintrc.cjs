@@ -252,7 +252,8 @@ const RECOMMENDED_REQUIRING_TYPE_CHECKING = {
   // "@typescript-eslint/require-await": "error",
   "@typescript-eslint/restrict-plus-operands": "error",
   "@typescript-eslint/restrict-template-expressions": "error",
-  "@typescript-eslint/unbound-method": "error",
+  // Can't enable with no-invalid-void-type - bc it considers this:void to be an error
+  // "@typescript-eslint/unbound-method": "error",
 };
 
 /** @type EslintConfig */
