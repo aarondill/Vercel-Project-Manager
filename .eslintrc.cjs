@@ -197,7 +197,12 @@ const tsRules = {
       allowTaggedTemplates: true,
     },
   ],
-  "@typescript-eslint/no-unused-vars": "warn",
+  "@typescript-eslint/no-unused-vars": [
+    "warn",
+    {
+      varsIgnorePattern: "_.*",
+    },
+  ],
   "@typescript-eslint/no-use-before-define": [
     "warn",
     {
