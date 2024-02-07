@@ -10,6 +10,9 @@ export class VercelDeploy implements Command {
     const code = await vercelCommand(this.vercel, "deploy");
     if (!code) return;
     const terminal = new Terminal("vercel deploy");
-    terminal.exec(code, true, true, true);
+    terminal.exec(code, {
+      closeOnSucc: true,
+      closeOnError: true,
+    });
   }
 }
