@@ -22,32 +22,15 @@ Without the Vercel CLI installed **globally** (install with `npm i -g vercel`) t
 
 ## Setup
 
-This extension will automatically detect any project with a .vercel/project.json file in it and use the project id defined in that file. If you are unsure of where that file comes from, check out the [Vercel CLI](https://vercel.com/docs/cli).
+This extension will automatically detect any project with a `.vercel/project.json` file in it and use the project id defined in that file. If you are unsure of where that file comes from, check out the [Vercel CLI](https://vercel.com/docs/cli).
 If you already have the Vercel CLI installed, run `vercel link` in your terminal or use the button on the side panel to connect to a Vercel project.
 
-1. Go to your [Vercel tokens page](https://vercel.com/account/tokens) and sign in
-2. Press `Create`
-3. Type a name into `TOKEN NAME`
-4. Select a scope. (Note: This extension will only work with scopes for which permission is granted. Attempting to use it on a disallowed scope will likely return many errors. To avoid this, selecting `full account` is recommended, but not required)
-5. Select an expiration date. Selecting `no expiration` will result in the least maintenance, however, selecting a date simply means you will have to generate a new token after that date to continue using this extension
-6. Press `Create Token`
-7. **Copy the code!** This is very important, because if you close it without copying, you have to regenerate a new token.
-8. Open VSCode and navigate to settings
-
-- If using settings.json, add `
-"vercel.AccessToken": "<YOUR-TOKEN-GOES-HERE>",`
-
-- if using the settings UI, search for `@ext:aarondill.vercel-project-manager-vscode` and input your token under `Vercel: Access Token`
-
-  ### _You may have to reload VSCode for the changes to take effect_
-
-9. Enjoy!
+Run the `Log in` command to log into your vercel account.
 
 ## Extension Settings
 
 This extension contributes the following settings:
 
-- `vercel.AccessToken`: Your Vercel Access Token(found at https://vercel.com/account/tokens).
 - `vercel.RefreshRate`: Number of minutes to wait between refreshes of Deployments and Environment. (Default 5 minutes)
 - `vercel.DeploymentCount`: Number of deployments to display from Vercel. (Default 20)
 
