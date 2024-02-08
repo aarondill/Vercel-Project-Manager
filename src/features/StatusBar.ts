@@ -4,7 +4,7 @@ import { relativeTimeFromDates } from "../utils/formatDates";
 import type { VercelManager } from "./VercelManager";
 
 export class StatusBar {
-  private interval: NodeJS.Timer;
+  private interval: NodeJS.Timeout;
 
   private statusIcon: StatusBarItem = window.createStatusBarItem(
     StatusBarAlignment.Right,

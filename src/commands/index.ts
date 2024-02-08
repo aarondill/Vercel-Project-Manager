@@ -1,13 +1,6 @@
-export { VercelDeploy } from "./cli/VercelDeploy";
-export { VercelDev } from "./cli/VercelDev";
-export { VercelLink } from "./cli/VercelLink";
+export * from "./cli";
+export * from "./Environment";
+export * from "./Deployments";
 export { CopyURL } from "./CopyURL";
-export { OpenDeploymentsLink } from "./Deployments/openDeploymentsLink";
-export { RefreshDeployments } from "./Deployments/RefreshDeployments";
-export { CreateEnvironment } from "./Environment/createEnvironment";
-export { OpenEnvironmentLink } from "./Environment/openEnvironmentLink";
-export { RefreshEnvironment } from "./Environment/refreshEnvironment";
-export { RemoveEnvironment } from "./Environment/removeEnvironment";
-export { SetEnvironment } from "./Environment/setEnvironment";
 export { LogIn } from "./LogIn";
 export { LogOut } from "./LogOut";

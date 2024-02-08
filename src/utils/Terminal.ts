@@ -1,53 +1,58 @@
 import * as vscode from "vscode";
-type CodeOptions = {
-  /** A list of strings to be combined with a deliminator and ran     */
-  code: string[];
-  /** Choice of Deliminator between *ALL* inputs; defaults to AND */
-  delim?: "AND" | "OR" | "CONTINUE";
-};
+import { shellEscape } from "./vercelCommand";
 
+export type TerminalOptions = Omit<
+  vscode.TerminalOptions,
+  "shellPath" | "shellArgs" | "message"
+>;
 export class Terminal {
   private term: vscode.Terminal;
-  constructor(opts: string | vscode.TerminalOptions = {}) {
-    const options = typeof opts === "string" ? { name: opts } : opts;
-    options.hideFromUser ??= true;
-    options.isTransient ??= true;
-    this.term = vscode.window.createTerminal(options);
+  constructor(command: string[], opts: string | TerminalOptions = {}) {
+    if (command.length === 0) throw new TypeError("Command cannot be empty");
+    this.term = vscode.window.createTerminal({
+      hideFromUser: false,
+      isTransient: true,
+      name: command[0],
+      ...(typeof opts === "string" ? { name: opts } : { ...opts }),
+      message: `> ${shellEscape(command)}`,
+      shellPath: command[0],
+      shellArgs: command.slice(1),
+    });
+    this.show();
   }
-  hide() {
-    this.term.hide();
+  /** @see vscode.Terminal["show"] */
+  show(...args: Parameters<vscode.Terminal["show"]>): this {
+    this.term.show(...args);
+    return this;
   }
-  kill() {
-    this.term.dispose();
+  /** @see vscode.Terminal["hide"] */
+  hide(...args: Parameters<vscode.Terminal["hide"]>): this {
+    this.term.hide(...args);
+    return this;
   }
-  /**
-   * @param {codeOpts} codeOpts String to execute, or array of strings and action to do upon failure
-   * @param closeOnInt Whether to close the terminal on interrupt signal (^c), default true
-   * @param closeOnSucc Whether to close the terminal on Success, default true
-   * @param closeOnError Whether to close the terminal on Error, default false
-   */
-  exec(
-    codeOpts: string | string[] | CodeOptions,
-    closeOnInt: boolean = true,
-    closeOnSucc: boolean = true,
-    closeOnError: boolean = false
-  ) {
-    let run: string;
-    if (Array.isArray(codeOpts)) codeOpts = { code: codeOpts };
-    if (typeof codeOpts === "object") {
-      const { code, delim: onError } = codeOpts;
-      if (onError === "OR") run = code.join(" || ");
-      else if (onError === "CONTINUE") run = code.join(" ; ");
-      else run = code.join(" && ");
-    } else run = codeOpts;
-
-    if (closeOnInt)
-      run = `(trap "exit \\$?" INT && ${run} ); ret=$? ; test $ret -eq 130 && exit 0`;
-    else run = `(${run}); ret=$?`;
-
-    if (closeOnSucc) run += ` ; test $ret -eq 0 && exit $ret`;
-    if (closeOnError) run += ` ; test $ret -nq 0 && exit $ret`;
-    this.term.show();
-    this.term.sendText(run, true);
+  /** @see vscode.Terminal["dispose"] */
+  dispose(...args: Parameters<vscode.Terminal["dispose"]>): this {
+    this.term.dispose(...args);
+    return this;
+  }
+  /** @see vscode.Terminal["dispose"] */
+  kill = this.dispose;
+  /** @see vscode.Terminal["sendText"] */
+  sendText(...args: Parameters<vscode.Terminal["sendText"]>): this {
+    this.term.sendText(...args);
+    return this;
+  }
+  // Returns a promise that resolves when the terminal has closed.
+  get exitStatus(): Promise<vscode.Terminal["exitStatus"]> {
+    if (this.term.exitStatus !== undefined)
+      return Promise.resolve(this.term.exitStatus);
+    return new Promise((resolve, reject) => {
+      const termEventListener = vscode.window.onDidCloseTerminal(t => {
+        if (t !== this.term) return;
+        termEventListener.dispose();
+        if (!this.term.exitStatus) return reject("Exit status not available");
+        return resolve(this.term.exitStatus);
+      });
+    });
   }
 }
