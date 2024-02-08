@@ -98,7 +98,7 @@ export class EnvironmentProvider
       ];
       return items;
     }
-    if (!this.vercel.selectedProject || !this.vercel.auth) return [];
+    if (!this.vercel.selectedProject || !(await this.vercel.auth)) return [];
     const items: vscode.TreeItem[] = [new CreateEnvironment()];
     const res = await this.vercel.env.getAll();
     if (res.length > 0) {

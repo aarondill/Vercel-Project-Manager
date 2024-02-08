@@ -31,7 +31,7 @@ export async function vercelCommand(
   opts?: TerminalOptions
 ): Promise<Terminal | undefined> {
   params = Array.isArray(params) ? params : [params];
-  const auth = vercel.auth;
+  const auth = await vercel.auth;
   if (!auth) {
     await window.showErrorMessage("Please set your authentication token");
     return;

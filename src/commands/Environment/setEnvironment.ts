@@ -23,7 +23,7 @@ export class SetEnvironment implements Command {
     key: string;
     editing: "TARGETS" | "VALUE";
   }) {
-    if (!(this.vercel.auth && this.vercel.selectedProject)) return;
+    if (!((await this.vercel.auth) && this.vercel.selectedProject)) return;
 
     //> Get info from arguments if given
     let id: string | undefined = command?.id;

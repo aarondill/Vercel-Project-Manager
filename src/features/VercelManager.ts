@@ -110,7 +110,7 @@ export class VercelManager {
      * or undefined if no project is selected or no user is authenticated
      */
     getAll: async (): Promise<VercelEnvironmentInformation[]> => {
-      if (this.auth && this.selectedProject) {
+      if ((await this.auth) && this.selectedProject) {
         const response = await Api.environment.getAll(
           {
             projectId: this.selectedProject,
@@ -206,7 +206,7 @@ export class VercelManager {
      * user or empty list if either doesn't exist
      */
     getAll: async () => {
-      if (this.auth && this.selectedProject) {
+      if ((await this.auth) && this.selectedProject) {
         try {
           this.fetchingDeployments = true;
           const limit = workspace
