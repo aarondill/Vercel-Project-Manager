@@ -69,11 +69,11 @@ export class VercelManager {
     return this.token.getAuth();
   }
   /** Utility getter to return the proper fetch options for authentication  */
-  private get authHeader() {
+  private async authHeader() {
+    const auth = await this.auth;
+    if (!auth) throw new Error("Not authenticated. Ensure user is logged in!");
     return {
-      headers: {
-        Authorization: `Bearer ${this.auth ?? "Something went wrong"}`,
-      },
+      headers: { Authorization: `Bearer ${auth}` },
     };
   }
 
@@ -84,7 +84,7 @@ export class VercelManager {
         {
           projectId: this.selectedProject,
         },
-        this.authHeader
+        await this.authHeader()
       );
       const result = (await response.json()) as VercelResponse.info.project;
       this.projectInfo = result;
@@ -94,13 +94,12 @@ export class VercelManager {
   user = {
     getInfo: async (refresh: boolean = false) => {
       if (this.userInfo !== null && !refresh) return this.userInfo;
-      const response = await Api.userInfo({}, this.authHeader);
+      const response = await Api.userInfo({}, await this.authHeader());
       const json = (await response.json()) as {
         user: VercelResponse.info.user;
       };
       const result = json.user;
-      this.userInfo = result;
-      return result;
+      return (this.userInfo = result);
     },
   };
   private envList: VercelEnvironmentInformation[] | null = null;
@@ -110,22 +109,14 @@ export class VercelManager {
      * or undefined if no project is selected or no user is authenticated
      */
     getAll: async (): Promise<VercelEnvironmentInformation[]> => {
-      if ((await this.auth) && this.selectedProject) {
-        const response = await Api.environment.getAll(
-          {
-            projectId: this.selectedProject,
-          },
-          this.authHeader
-        );
-        const data =
-          (await response.json()) as VercelResponse.environment.getAll;
-        let r = undefined;
-        if ("envs" in data) r = data.envs || [];
-        else r = [data];
-        this.envList = r;
-        return r;
-      }
-      return [];
+      if (!(await this.auth) || !this.selectedProject) return [];
+      const response = await Api.environment.getAll(
+        { projectId: this.selectedProject },
+        await this.authHeader()
+      );
+      const data = (await response.json()) as VercelResponse.environment.getAll;
+      const r = "envs" in data ? data.envs ?? [] : [data];
+      return (this.envList = r);
     },
     /** returns the environment variable list, updating it if null */
     getEnvList: async () => {
@@ -143,7 +134,7 @@ export class VercelManager {
           projectId: this.selectedProject,
         },
         {
-          headers: this.authHeader.headers,
+          headers: (await this.authHeader()).headers,
           body: JSON.stringify({
             key,
             value,
@@ -165,7 +156,7 @@ export class VercelManager {
           projectId: this.selectedProject,
           id,
         },
-        this.authHeader
+        await this.authHeader()
       );
       this.onDidEnvironmentsUpdated();
     },
@@ -182,7 +173,7 @@ export class VercelManager {
           id,
         },
         {
-          headers: this.authHeader.headers,
+          headers: (await this.authHeader()).headers,
 
           body: JSON.stringify({
             value,
@@ -206,28 +197,25 @@ export class VercelManager {
      * user or empty list if either doesn't exist
      */
     getAll: async () => {
-      if ((await this.auth) && this.selectedProject) {
-        try {
-          this.fetchingDeployments = true;
-          const limit = workspace
-            .getConfiguration("vercel")
-            .get("DeploymentCount") as number;
-          const response = await Api.deployments(
-            {
-              projectId: this.selectedProject,
-              limit: limit ?? 20,
-            },
-            this.authHeader
-          );
-          const data = (await response.json()) as VercelResponse.deployment;
-          const r = data.deployments ?? [];
-          this.deploymentsList = r;
-          return r;
-        } finally {
-          this.fetchingDeployments = false;
-        }
-      } else {
-        return [];
+      if (!this.selectedProject || !(await this.auth)) return [];
+      try {
+        this.fetchingDeployments = true;
+        const limit = workspace
+          .getConfiguration("vercel")
+          .get("DeploymentCount") as number;
+        const response = await Api.deployments(
+          {
+            projectId: this.selectedProject,
+            limit: limit ?? 20,
+          },
+          await this.authHeader()
+        );
+        const data = (await response.json()) as VercelResponse.deployment;
+        const r = data.deployments ?? [];
+        this.deploymentsList = r;
+        return r;
+      } finally {
+        this.fetchingDeployments = false;
       }
     },
   };
