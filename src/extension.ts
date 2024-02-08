@@ -34,20 +34,6 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(registerCommands(vercel));
 }
 function registerCommands(vercel: VercelManager): vscode.Disposable {
-  const commandManager = new CommandManager();
-  commandManager.register(new commands.LogIn(vercel));
-  commandManager.register(new commands.LogOut(vercel));
-  commandManager.register(new commands.CopyURL());
-  commandManager.register(new commands.RefreshDeployments(vercel));
-  commandManager.register(new commands.VercelDev(vercel));
-  commandManager.register(new commands.RefreshEnvironment(vercel));
-  commandManager.register(new commands.RemoveEnvironment(vercel));
-  commandManager.register(new commands.SetEnvironment(vercel));
-  commandManager.register(new commands.CreateEnvironment(vercel));
-  commandManager.register(new commands.OpenEnvironmentLink(vercel));
-  commandManager.register(new commands.OpenDeploymentsLink(vercel));
-  commandManager.register(new commands.VercelLink(vercel));
-  commandManager.register(new commands.VercelDeploy(vercel));
-  return commandManager;
+  return new CommandManager().registerAll(commands, vercel);
 }
 export function deactivate() {}
