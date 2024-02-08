@@ -116,6 +116,15 @@ export namespace VercelResponse {
       message: string;
     };
   };
+  export namespace oauth {
+    export type accessToken = {
+      token_type: "Bearer";
+      access_token: string;
+      installation_id: string;
+      user_id: string | null;
+      team_id: string | null;
+    };
+  }
   export type deployment = {
     pagination: Pagination;
     deployments: Deployment[];

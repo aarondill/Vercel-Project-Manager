@@ -52,9 +52,10 @@ export class Api {
     const path = initial.path;
     //> Returns a function for fetching
     return async (
-      options: ParamMap,
+      options?: ParamMap,
       fetchOptions?: RequestInit
     ): Promise<Response> => {
+      options ??= {};
       const finalOptions = { ...initOpt, ...options };
       const finalFetchOptions: RequestInit = this.mergeHeaders(
         initFetchOpt,
@@ -64,12 +65,14 @@ export class Api {
       const response = await fetch(url, finalFetchOptions);
 
       //> Check for error and tell user
-      const responseClone = response.clone();
-      const data = (await responseClone.json()) as VercelResponse.error;
-      if ("error" in data)
-        await window.showErrorMessage(
-          `Error: ${data?.error?.message ?? "unknown"}`
-        );
+      try {
+        const responseClone = response.clone();
+        const data = (await responseClone.json()) as VercelResponse.error;
+        if (!data || "error" in data) {
+          const msg = `Error: ${data?.error?.message ?? "unknown"}`;
+          void window.showErrorMessage(msg);
+        }
+      } catch (e) {}
 
       //> return original response
       return response;
@@ -118,6 +121,18 @@ export class Api {
       path: "/v9/projects/:projectId/env/:id",
       fetch: {
         method: "PATCH",
+      },
+    }),
+  };
+  public static oauth = {
+    /** Note: This requires a body with code, redirect_uri, client_id, and client_secret */
+    accessToken: this.init({
+      path: "/v2/oauth/access_token",
+      fetch: {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        },
       },
     }),
   };

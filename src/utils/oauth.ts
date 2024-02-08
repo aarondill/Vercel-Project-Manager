@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 import http from "http";
+import { Api } from "./Api";
+import type { VercelResponse } from "../features/models";
+// These are constants configured in the vercel dashboard. They must match those values!
 const OAUTH_PORT = 9615;
 const OAUTH_PATH = "/oauth-complete";
 const OAUTH_URL = `http://localhost:${OAUTH_PORT}${OAUTH_PATH}`;
@@ -44,24 +47,17 @@ async function serveResponse(
   });
 }
 async function getTokenFromCode(code: string): Promise<string | undefined> {
-  const url = new URL("https://api.vercel.com/v2/oauth/access_token");
-  const headers = {
-    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-  };
-  const params = new URLSearchParams({
-    code: code,
-    redirect_uri: OAUTH_URL, // eslint-disable-line @typescript-eslint/naming-convention
-    client_id: CLIENT_ID, // eslint-disable-line @typescript-eslint/naming-convention
-    client_secret: CLIENT_SEC, // eslint-disable-line @typescript-eslint/naming-convention
+  const res = await Api.oauth.accessToken(undefined, {
+    body: new URLSearchParams({
+      code: code,
+      redirect_uri: OAUTH_URL, // eslint-disable-line @typescript-eslint/naming-convention
+      client_id: CLIENT_ID, // eslint-disable-line @typescript-eslint/naming-convention
+      client_secret: CLIENT_SEC, // eslint-disable-line @typescript-eslint/naming-convention
+    }),
   });
-  const res = await fetch(url, { headers, method: "POST", body: params });
-  if (!res.ok) {
-    return;
-  }
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const jsonRes = (await res.json()) as { access_token: string };
-  const accessToken = jsonRes.access_token;
-  return accessToken;
+  if (!res.ok) return;
+  const jsonRes = (await res.json()) as VercelResponse.oauth.accessToken;
+  return jsonRes.access_token;
 }
 export async function getTokenOauth() {
   // Check well known ip before starting a server and a browser
