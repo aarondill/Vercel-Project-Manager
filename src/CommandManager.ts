@@ -3,7 +3,7 @@ import type { VercelManager } from "./features/VercelManager";
 
 export interface Command {
   readonly id: string;
-  execute(...args: any[]): Thenable<void>;
+  execute(...args: unknown[]): Thenable<unknown>;
 }
 export interface CommandConstructable {
   new (vercel: VercelManager): Command;
@@ -42,8 +42,8 @@ export class CommandManager implements vscode.Disposable {
 
   private registerCommand(
     id: string,
-    impl: (...args: any[]) => void,
-    thisArg?: any
+    impl: (...args: unknown[]) => void,
+    thisArg?: unknown
   ) {
     if (this.commands.has(id)) return;
     this.commands.set(id, vscode.commands.registerCommand(id, impl, thisArg));

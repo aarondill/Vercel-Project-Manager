@@ -1,9 +1,11 @@
 import { window } from "vscode";
 import type { VercelManager } from "../features/VercelManager";
 import which from "which";
+import type { TerminalOptions } from "./Terminal";
+import { Terminal } from "./Terminal";
 
 const isWin = process.platform === "win32";
-function shellEscape(arg: string[]): string {
+export function shellEscape(arg: string[]): string {
   if (isWin) return arg.join(" "); // TODO: fix this. this is a hard problem though.
 
   // source: https://www.npmjs.com/package/shell-escape
@@ -18,14 +20,16 @@ function shellEscape(arg: string[]): string {
 }
 
 /**
+ * Opens a new terminal with the given command
  * @param {VercelManager} vercel
  * @param params the commands to pass to vercel. note: don't include -t
  * If a string is passed as params, it will be the only parameter passed
  */
 export async function vercelCommand(
   vercel: VercelManager,
-  params: string[] | string
-): Promise<string | undefined> {
+  params: string[] | string,
+  opts?: TerminalOptions
+): Promise<Terminal | undefined> {
   params = Array.isArray(params) ? params : [params];
   const auth = vercel.auth;
   if (!auth) {
@@ -38,5 +42,7 @@ export async function vercelCommand(
     await window.showErrorMessage(msg);
     return;
   }
-  return shellEscape([vercelPath, ...params, "-t", auth]);
+  const cmd = [vercelPath, ...params, "-t", auth];
+  const name = "Vercel " + params[0];
+  return new Terminal(cmd, { name, ...opts }).show(true);
 }
