@@ -52,35 +52,41 @@ export class TokenManager {
 
   public onProjectStateChanged: (id?: string) => void;
 
+  private readonly globalState: vscode.Memento;
+  private readonly secrets: vscode.SecretStorage;
   constructor(
-    private readonly globalState: vscode.Memento,
+    { globalState, secrets }: vscode.ExtensionContext,
     {
       onAuthStateChanged,
       onProjectStateChanged,
     }: {
-      onAuthStateChanged: (state: boolean) => void;
+      onAuthStateChanged?: (state: boolean) => void;
       onProjectStateChanged?: (id?: string) => void;
     }
   ) {
-    this.onAuthStateChanged = onAuthStateChanged;
+    this.globalState = globalState;
+    this.secrets = secrets;
+    this.onAuthStateChanged = onAuthStateChanged ?? (x => x);
     this.onProjectStateChanged = onProjectStateChanged ?? (x => x);
     // initial run
-    this.onAuthStateChanged(!!globalState.get(this.authKey));
-    if (this.getAuth())
+    void this.getAuth().then(auth => {
+      this.onAuthStateChanged(!!auth);
       this.onDidLogIn().catch(e =>
-        console.error(
-          `something went wrong running the DidLogIn handler: ${String(e)}`
+        vscode.window.showErrorMessage(
+          `error while running DidLogIn handler: ${String(e)}`
         )
       );
+    });
   }
 
   setAuth(token: string | undefined) {
     this.onAuthStateChanged(!!token);
-    return this.globalState.update(this.authKey, token);
+    if (token === undefined) return this.secrets.delete(this.authKey);
+    return this.secrets.store(this.authKey, token);
   }
 
-  getAuth(): string | undefined {
-    return this.globalState.get(this.authKey);
+  getAuth(): Thenable<string | undefined> {
+    return this.secrets.get(this.authKey);
   }
 
   async setProject(token: string | undefined) {
