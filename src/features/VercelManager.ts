@@ -8,6 +8,7 @@ import type {
   VercelEnvironmentInformation,
   VercelResponse,
 } from "./models";
+import { getTokenOauth } from "../utils/oauth";
 
 export class VercelManager {
   public onDidEnvironmentsUpdated: () => void = () => {};
@@ -41,11 +42,14 @@ export class VercelManager {
     };
   }
 
-  async logIn(apiToken: string): Promise<void> {
+  async logIn(): Promise<boolean> {
+    const apiToken = await getTokenOauth();
+    if (!apiToken) return false;
     await this.token.setAuth(apiToken);
     this.onDidDeploymentsUpdated();
     this.onDidEnvironmentsUpdated();
     await this.token.onDidLogIn();
+    return true;
   }
 
   /**
