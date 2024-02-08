@@ -114,10 +114,10 @@ export class VercelManager {
      */
     getAll: async (): Promise<VercelEnvironmentInformation[]> => {
       if (!(await this.auth) || !this.selectedProject) return [];
-      const response = await Api.environment.getAll(
-        { projectId: this.selectedProject },
-        await this.authHeader()
-      );
+      const response = await Api.environment
+        .getAll({ projectId: this.selectedProject }, await this.authHeader())
+        .catch(() => null);
+      if (!response) return (this.envList = []);
       const data = (await response.json()) as VercelResponse.environment.getAll;
       const r = "envs" in data ? data.envs ?? [] : [data];
       return (this.envList = r);
@@ -213,11 +213,11 @@ export class VercelManager {
             limit: limit ?? 20,
           },
           await this.authHeader()
-        );
+        ).catch(() => null);
+        if (!response) return (this.deploymentsList = []);
         const data = (await response.json()) as VercelResponse.deployment;
         const r = data.deployments ?? [];
-        this.deploymentsList = r;
-        return r;
+        return (this.deploymentsList = r);
       } finally {
         this.fetchingDeployments = false;
       }
