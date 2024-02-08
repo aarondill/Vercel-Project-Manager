@@ -64,6 +64,12 @@ async function getTokenFromCode(code: string): Promise<string | undefined> {
   return accessToken;
 }
 export async function getTokenOauth() {
+  // Check well known ip before starting a server and a browser
+  const req = await fetch("https://1.1.1.1").catch(() => null);
+  if (!req || !req.ok) {
+    const msg = "Failed to authenticate with Vercel (Network error!).";
+    return await vscode.window.showErrorMessage(msg);
+  }
   const resUrl = serveResponse(OAUTH_PORT, OAUTH_PATH); // don't await it here! We need to open the url before it's meaningful.
   await vscode.env.openExternal(vscode.Uri.parse(link)); // open in a browser
   const code = (await resUrl).searchParams.get("code");
