@@ -10,5 +10,6 @@ export function parseJsonObject<T extends Record<PropertyKey, unknown>>(
   }
   if (!parsed) return;
   if (typeof parsed !== "object") return;
-  return parsed;
+  // HACK: I can't verify the type. Be careful.
+  return parsed as T;
 }

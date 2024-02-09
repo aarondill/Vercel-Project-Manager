@@ -157,7 +157,7 @@ export class DeploymentsProvider
       if (element.data.meta && Object.keys(element.data.meta).length !== 0) {
         const commit = getCommit(element.data.meta);
 
-        if (commit !== null) {
+        if (commit) {
           items.push(
             ...[
               new DeploymentBranchItem(commit),

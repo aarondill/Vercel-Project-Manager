@@ -21,28 +21,22 @@ export function shellEscape(arg: string[]): string {
 
 /**
  * Opens a new terminal with the given command
- * @param {VercelManager} vercel
  * @param params the commands to pass to vercel. note: don't include -t
  * If a string is passed as params, it will be the only parameter passed
  */
 export async function vercelCommand(
-  vercel: VercelManager,
+  _: VercelManager,
   params: string[] | string,
   opts?: TerminalOptions
 ): Promise<Terminal | undefined> {
   params = Array.isArray(params) ? params : [params];
-  const auth = await vercel.auth;
-  if (!auth) {
-    await window.showErrorMessage("Please set your authentication token");
-    return;
-  }
   const vercelPath = await which("vercel", { nothrow: true });
   if (!vercelPath) {
     const msg = `The vercel CLI is required for this feature.\nPlease install with npm install -g vercel`;
     await window.showErrorMessage(msg);
     return;
   }
-  const cmd = [vercelPath, ...params, "-t", auth];
+  const cmd = [vercelPath, ...params];
   const name = "Vercel " + params[0];
   return new Terminal(cmd, { name, ...opts }).show(true);
 }

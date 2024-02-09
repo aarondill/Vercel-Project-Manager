@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import http from "http";
 import { Api } from "./Api";
 import type { VercelResponse } from "../features/models";
+import { listen } from "async-listen";
 // These are constants configured in the vercel dashboard. They must match those values!
 const OAUTH_PORT = 9615;
 const OAUTH_PATH = "/oauth-complete";
@@ -10,41 +11,46 @@ const CLIENT_ID = "oac_dJy0AdgVEITrkrnYF5Y4nSlo";
 const CLIENT_SEC = "NPBb5J2ZNrlhX3W98DCPS1o1";
 
 const vercelSlug = "vercel-project-manager";
-const link = `https://vercel.com/integrations/${vercelSlug}/new`;
 
 /** successMessage is html */
-async function serveResponse(
+async function doOauth(
   port: number,
   pathname?: string // If present, will ignore all other paths
 ): Promise<URL> {
-  return await new Promise((resolve, reject) => {
-    const server = http.createServer(async function (req, res) {
-      const url = req.url && new URL(req.url, `http://${req.headers.host}`);
-      if (!url || url.pathname !== pathname) {
+  const server = http.createServer();
+  await listen(server, port, "127.0.0.1");
+  // url.searchParams.set('next', `http://localhost:${port}`);
+
+  let resolve: (value: URL) => void, reject: (reason: any) => void;
+  const p = new Promise<URL>(
+    (_resolve, _reject) => ((resolve = _resolve), (reject = _reject))
+  );
+
+  try {
+    server.once("request", function (req, res) {
+      // Close the HTTP connection to prevent
+      // `server.close()` from hanging
+      res.setHeader("connection", "close");
+      const url = new URL(req.url ?? "/", `http://${req.headers.host}`);
+      if (url.pathname !== pathname) {
         res.writeHead(404);
         res.end();
-        if (!url) reject(new Error("No URL provided"));
         return;
       }
+      resolve(url);
       res.writeHead(200, { "Content-Type": "text/html" });
       res.end(
         "<html><body>Authentication successful! You can now close this window.</body></html>"
       );
-      server.close();
-      return resolve(url);
     });
-    server.on("error", e => {
-      if (!("code" in e) || e.code !== "EADDRINUSE") return;
-      // console.error("Address in use, retrying...");
-      let tries = 0;
-      setTimeout(() => {
-        if (tries++ > 5) return reject(e); // Retry up to 5 times
-        server.close();
-        server.listen(port);
-      }, 1000);
-    });
-    server.listen(port);
-  });
+    server.once("error", e => reject(e));
+    const link = `https://vercel.com/integrations/${vercelSlug}/new`;
+    void vscode.window.showInformationMessage(`Please sign in in your browser`);
+    await vscode.env.openExternal(vscode.Uri.parse(link)); // open in a browser
+    return await p;
+  } finally {
+    server.close();
+  }
 }
 async function getTokenFromCode(code: string): Promise<string | undefined> {
   const res = await Api.oauth.accessToken(undefined, {
@@ -62,13 +68,12 @@ async function getTokenFromCode(code: string): Promise<string | undefined> {
 export async function getTokenOauth() {
   // Check well known ip before starting a server and a browser
   const req = await fetch("https://1.1.1.1").catch(() => null);
-  if (!req || !req.ok) {
-    const msg = "Failed to authenticate with Vercel (Network error!).";
+  if (!req?.ok) {
+    const msg = `Failed to authenticate with Vercel (Network error!). ${req?.statusText}`;
     return await vscode.window.showErrorMessage(msg);
   }
-  const resUrl = serveResponse(OAUTH_PORT, OAUTH_PATH); // don't await it here! We need to open the url before it's meaningful.
-  await vscode.env.openExternal(vscode.Uri.parse(link)); // open in a browser
-  const code = (await resUrl).searchParams.get("code");
+  const resUrl = await doOauth(OAUTH_PORT, OAUTH_PATH);
+  const code = resUrl.searchParams.get("code");
   if (!code) {
     const msg = "Failed to authenticate with Vercel (Couldn't get code).";
     return await vscode.window.showErrorMessage(msg);
