@@ -1,8 +1,5 @@
 import * as vscode from "vscode";
-import { parseError } from "../utils/parseError";
 import path from "path";
-import { unlink } from "fs";
-import { typeGuard } from "tsafe";
 import { parseJsonObject } from "../utils/jsonParse";
 
 export class TokenManager {
