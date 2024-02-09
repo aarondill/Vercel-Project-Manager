@@ -1,9 +1,10 @@
-import type { RequestInit, Response } from "node-fetch";
+import type { RequestInit } from "node-fetch";
 import fetch from "node-fetch";
 import type { ParamMap } from "urlcat";
 import urlcat from "urlcat";
 import { window } from "vscode";
 import type { VercelResponse } from "../features/models";
+import { typeGuard } from "tsafe";
 
 export class Api {
   /** Combines two objects, combining any object properties down one level
@@ -42,11 +43,9 @@ export class Api {
    * @param initial Initial configuration for the API call
    * @returns A function that performs a fetch with the options requested
    */
-  private static init(initial: {
-    path: string;
-    params?: ParamMap;
-    fetch?: RequestInit;
-  }) {
+  private static init<
+    T extends Record<PropertyKey, unknown> | unknown[],
+  >(initial: { path: string; params?: ParamMap; fetch?: RequestInit }) {
     const initOpt = initial.params ?? {};
     const initFetchOpt = initial.fetch ?? {};
     const path = initial.path;
@@ -54,7 +53,7 @@ export class Api {
     return async (
       options?: ParamMap,
       fetchOptions?: RequestInit
-    ): Promise<Response> => {
+    ): Promise<(T & { ok: true }) | (VercelResponse.error & { ok: false })> => {
       options ??= {};
       const finalOptions = { ...initOpt, ...options };
       const finalFetchOptions: RequestInit = this.mergeHeaders(
@@ -62,62 +61,82 @@ export class Api {
         fetchOptions
       );
       const url = this.base(path, finalOptions);
-      const response = await fetch(url, finalFetchOptions);
-
+      const response = await fetch(url, finalFetchOptions).catch(
+        e =>
+          ({
+            error: {
+              code: "FetchError",
+              message: `A Network Error Occured: ${e}`,
+            },
+          }) as const
+      );
+      if ("error" in response) return { ...response, ok: false };
       //> Check for error and tell user
-      try {
-        const responseClone = response.clone();
-        const data = (await responseClone.json()) as VercelResponse.error;
-        if (!data || "error" in data) {
-          const msg = `Error: ${data?.error?.message ?? "unknown"}`;
-          void window.showErrorMessage(msg);
-        }
-      } catch (e) {}
-
-      //> return original response
-      return response;
+      const invalidResponseError = {
+        error: {
+          code: "InvalidResponse",
+          message: "Failed to parse response json",
+        },
+      };
+      const data =
+        (await response.json().then(
+          r => r as T | VercelResponse.error,
+          () => null
+        )) ?? invalidResponseError;
+      if (typeGuard<VercelResponse.error>(data, "error" in data)) {
+        const msg = `Vercel Server Error: ${data?.error?.message ?? "unknown error"}`;
+        void window.showErrorMessage(msg);
+        return {
+          ...data,
+          ok: false,
+        };
+      }
+      return {
+        ...data,
+        ok: true,
+      };
     };
   }
 
-  public static deployments = this.init({
+  public static deployments = this.init<VercelResponse.deployment>({
     path: "/v6/deployments",
     fetch: {
       method: "GET",
     },
   });
-  public static projectInfo = this.init({
+  public static projectInfo = this.init<VercelResponse.info.project>({
     path: "/v9/projects/:projectId",
     fetch: {
       method: "GET",
     },
   });
-  public static userInfo = this.init({
+  public static userInfo = this.init<VercelResponse.info.user>({
     path: "/v2/user",
     fetch: {
       method: "GET",
     },
   });
   public static environment = {
-    getAll: this.init({
+    getAll: this.init<VercelResponse.environment.getAll>({
       path: "/v8/projects/:projectId/env",
       params: { decrypt: "true" },
       fetch: {
         method: "GET",
       },
     }),
-    remove: this.init({
+    remove: this.init<VercelResponse.environment.remove>({
       path: "/v9/projects/:projectId/env/:id",
       fetch: {
         method: "DELETE",
       },
     }),
-    create: this.init({
+    create: this.init<VercelResponse.environment.create>({
       path: "/v10/projects/:projectId/env",
       fetch: {
         method: "POST",
       },
     }),
-    edit: this.init({
+    edit: this.init<VercelResponse.environment.edit>({
       path: "/v9/projects/:projectId/env/:id",
       fetch: {
         method: "PATCH",
@@ -126,7 +145,7 @@ export class Api {
   };
   public static oauth = {
     /** Note: This requires a body with code, redirect_uri, client_id, and client_secret */
-    accessToken: this.init({
+    accessToken: this.init<VercelResponse.oauth.accessToken>({
       path: "/v2/oauth/access_token",
       fetch: {
         method: "POST",

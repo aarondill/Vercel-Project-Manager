@@ -62,8 +62,7 @@ async function getTokenFromCode(code: string): Promise<string | undefined> {
     }),
   });
   if (!res.ok) return;
-  const jsonRes = (await res.json()) as VercelResponse.oauth.accessToken;
-  return jsonRes.access_token;
+  return res.access_token;
 }
 export async function getTokenOauth() {
   // Check well known ip before starting a server and a browser

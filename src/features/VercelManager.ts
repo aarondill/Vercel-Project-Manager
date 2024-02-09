@@ -18,7 +18,7 @@ export class VercelManager {
   public onDidProjectSelected: () => void = () => {};
 
   private projectInfo: VercelResponse.info.project | null = null;
-  private userInfo: VercelResponse.info.user | null = null;
+  private userInfo: VercelResponse.info.User | null = null;
 
   public constructor(private readonly token: TokenManager) {
     const refreshRate = workspace
@@ -84,26 +84,22 @@ export class VercelManager {
   project = {
     getInfo: async (refresh: boolean = false) => {
       if (this.projectInfo !== null && !refresh) return this.projectInfo;
-      const response = await Api.projectInfo(
+      const result = await Api.projectInfo(
         {
           projectId: this.selectedProject,
         },
         await this.authHeader()
       );
-      const result = (await response.json()) as VercelResponse.info.project;
-      this.projectInfo = result;
-      return result;
+      if (result.ok) return;
+      return (this.projectInfo = result);
     },
   };
   user = {
     getInfo: async (refresh: boolean = false) => {
       if (this.userInfo !== null && !refresh) return this.userInfo;
       const response = await Api.userInfo({}, await this.authHeader());
-      const json = (await response.json()) as {
-        user: VercelResponse.info.user;
-      };
-      const result = json.user;
-      return (this.userInfo = result);
+      if (!response.ok) return;
+      return (this.userInfo = response.user);
     },
   };
   private envList: VercelEnvironmentInformation[] | null = null;
@@ -114,12 +110,12 @@ export class VercelManager {
      */
     getAll: async (): Promise<VercelEnvironmentInformation[]> => {
       if (!(await this.auth) || !this.selectedProject) return [];
-      const response = await Api.environment
-        .getAll({ projectId: this.selectedProject }, await this.authHeader())
-        .catch(() => null);
-      if (!response) return (this.envList = []);
-      const data = (await response.json()) as VercelResponse.environment.getAll;
-      const r = "envs" in data ? data.envs ?? [] : [data];
+      const response = await Api.environment.getAll(
+        { projectId: this.selectedProject },
+        await this.authHeader()
+      );
+      if (!response.ok) return (this.envList = []);
+      const r = "envs" in response ? response.envs ?? [] : [response];
       return (this.envList = r);
     },
     /** returns the environment variable list, updating it if null */
@@ -207,15 +203,14 @@ export class VercelManager {
         const limit = workspace
           .getConfiguration("vercel")
           .get("DeploymentCount") as number;
-        const response = await Api.deployments(
+        const data = await Api.deployments(
           {
             projectId: this.selectedProject,
             limit: limit ?? 20,
           },
           await this.authHeader()
-        ).catch(() => null);
-        if (!response) return (this.deploymentsList = []);
-        const data = (await response.json()) as VercelResponse.deployment;
+        );
+        if (!data.ok) return (this.deploymentsList = []);
         const r = data.deployments ?? [];
         return (this.deploymentsList = r);
       } finally {

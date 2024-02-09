@@ -198,8 +198,9 @@ export namespace VercelResponse {
       /** Construct a type with a set of properties K of type T */
       protectionBypass?: { [key: string]: string };
     };
+    export type user = { user: User };
     /** Data for the currently authenticated User. */
-    export type user = {
+    export type User = {
       /** UNIX timestamp (in milliseconds) when the User account was created. */
       createdAt: number;
       /** When the User account has been "soft blocked", this property will contain the date when the restriction was enacted, and the identifier for why. */
