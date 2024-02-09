@@ -2,6 +2,7 @@ import { Blob } from "node-fetch";
 import { window } from "vscode";
 import type { Command } from "../../CommandManager";
 import type { VercelManager } from "../../features/VercelManager";
+import { vercelTargets } from "../../features/models";
 
 export class CreateEnvironment implements Command {
   public readonly id = "vercel.createEnvironment";
@@ -51,19 +52,11 @@ export class CreateEnvironment implements Command {
     if (value === undefined) return;
 
     //> Get targets from user
-    const options = [
-      {
-        label: "Development",
-        alwaysShow: true,
-        picked: true,
-      },
-      { label: "Preview", alwaysShow: true, picked: true },
-      {
-        label: "Production",
-        alwaysShow: true,
-        picked: true,
-      },
-    ];
+    const options = vercelTargets.map(t => ({
+      label: t,
+      alwaysShow: true,
+      picked: true,
+    }));
 
     /** User's choice of targets as a list of options*/
     const targetsChoices = await window.showQuickPick(options, {
@@ -72,8 +65,7 @@ export class CreateEnvironment implements Command {
       title: `Creating ${key}`,
     });
     if (!targetsChoices || targetsChoices.length === 0) return;
-    const targets = targetsChoices.map(x => x.label.toLowerCase());
-
+    const targets = targetsChoices.map(x => x.label);
     await this.vercel.env.create(key, value, targets);
   }
 }

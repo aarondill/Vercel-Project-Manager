@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import http from "http";
 import { Api } from "./Api";
-import type { VercelResponse } from "../features/models";
 import { listen } from "async-listen";
 // These are constants configured in the vercel dashboard. They must match those values!
 const OAUTH_PORT = 9615;
@@ -53,14 +52,17 @@ async function doOauth(
   }
 }
 async function getTokenFromCode(code: string): Promise<string | undefined> {
-  const res = await Api.oauth.accessToken(undefined, {
-    body: new URLSearchParams({
-      code: code,
-      redirect_uri: OAUTH_URL, // eslint-disable-line @typescript-eslint/naming-convention
-      client_id: CLIENT_ID, // eslint-disable-line @typescript-eslint/naming-convention
-      client_secret: CLIENT_SEC, // eslint-disable-line @typescript-eslint/naming-convention
-    }),
-  });
+  const res = await Api.oauth.accessToken(
+    {
+      body: {
+        code: code,
+        redirect_uri: OAUTH_URL, // eslint-disable-line @typescript-eslint/naming-convention
+        client_id: CLIENT_ID, // eslint-disable-line @typescript-eslint/naming-convention
+        client_secret: CLIENT_SEC, // eslint-disable-line @typescript-eslint/naming-convention
+      },
+    },
+    undefined
+  );
   if (!res.ok) return;
   return res.access_token;
 }

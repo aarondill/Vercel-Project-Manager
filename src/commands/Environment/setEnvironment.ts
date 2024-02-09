@@ -1,6 +1,9 @@
 import { window } from "vscode";
 import type { Command } from "../../CommandManager";
-import type { VercelEnvironmentInformation } from "../../features/models";
+import {
+  vercelTargets,
+  type VercelEnvironmentInformation,
+} from "../../features/models";
 import type { VercelManager } from "../../features/VercelManager";
 
 export class SetEnvironment implements Command {
@@ -43,9 +46,9 @@ export class SetEnvironment implements Command {
     if (!id || !key) return;
 
     //> Find variable being changed
-    const env = envList.find(
-      env => env.id === id
-    ) as VercelEnvironmentInformation;
+    const env = envList.find(env => env.id === id);
+    if (!env)
+      return void window.showErrorMessage("Could not find environment!");
 
     //> get user input for value(placeholder = original value)
     const currValue = env.value;
@@ -61,51 +64,33 @@ export class SetEnvironment implements Command {
 
     //> Get user options of targets to apply to
     /** list of initial targets */
-    const initialTargets: string[] =
-      typeof env.target === "string" ? [env.target] : env.target!;
+    const initialTargets =
+      typeof env.target === "string" ? [env.target] : env.target ?? [];
 
-    let targets: string[] | undefined;
+    let targets = initialTargets;
     /** Check if Arguments say only to edit values */
     if (!command?.editing || command.editing === "TARGETS") {
-      /** Function to check if the original contained the target */
-      const getPicked = (target: string) => initialTargets?.includes(target);
-
       /** List of options available for user choice */
-      const options = [
-        {
-          label: "Development",
-          alwaysShow: true,
-          picked: getPicked("development"),
-        },
-        { label: "Preview", alwaysShow: true, picked: getPicked("preview") },
-        {
-          label: "Production",
-          alwaysShow: true,
-          picked: getPicked("production"),
-        },
-      ];
+      const options = vercelTargets.map(l => ({
+        label: l,
+        alwaysShow: true,
+        picked: initialTargets.includes(l),
+      }));
 
       /** User's choice of targets as a list of options*/
       const chosen = await window.showQuickPick(options, {
         canPickMany: true,
-        placeHolder: "Select environments to apply to (None or esc to cancel)",
+        placeHolder: "Select environments to apply to (esc to cancel)",
         title: `Editing ${key}`,
       });
+      if (!chosen) return;
       /** List of choices as strings */
       targets = chosen?.map(t => t.label);
-    } else {
-      /** Editing Values Through Arguments */
-      targets = initialTargets;
     }
     //> Return if canceled
-    if (targets === undefined || targets === null || targets.length === 0)
-      return;
+    if (targets.length === 0) return;
 
     //> edit the env by **ID**, new value and targets
-    await this.vercel.env.edit(
-      id,
-      newValue,
-      targets.map(t => t.toLowerCase())
-    );
+    await this.vercel.env.edit(id, newValue, targets);
   }
 }

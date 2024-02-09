@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // 👆 because vercel API requires snake_case keys
-import { workspace } from "vscode";
+import { window, workspace } from "vscode";
 import { Api } from "../utils/Api";
 import type { TokenManager } from "./TokenManager";
 import type {
   Deployment,
   VercelEnvironmentInformation,
   VercelResponse,
+  VercelTargets,
 } from "./models";
 import { getTokenOauth } from "../utils/oauth";
 
@@ -84,13 +85,14 @@ export class VercelManager {
   project = {
     getInfo: async (refresh: boolean = false) => {
       if (this.projectInfo !== null && !refresh) return this.projectInfo;
+      const selectedProject = this.selectedProject;
+      if (!selectedProject)
+        return void window.showErrorMessage("No project selected!");
       const result = await Api.projectInfo(
-        {
-          projectId: this.selectedProject,
-        },
+        { projectId: selectedProject },
         await this.authHeader()
       );
-      if (result.ok) return;
+      if (!result.ok) return;
       return (this.projectInfo = result);
     },
   };
@@ -126,22 +128,15 @@ export class VercelManager {
      *
      * @param key Name of var to create
      * @param value Value to store in variable
-     * @param {("development" | "preview" | "production")[]} targets Deployment targets to set to
+     * @param target Deployment targets to set to
      */
-    create: async (key: string, value: string, targets: string[]) => {
+    create: async (key: string, value: string, target: VercelTargets[]) => {
+      const projectId = this.selectedProject;
+      if (!projectId)
+        return void window.showErrorMessage("No project selected!");
       await Api.environment.create(
-        {
-          projectId: this.selectedProject,
-        },
-        {
-          headers: (await this.authHeader()).headers,
-          body: JSON.stringify({
-            key,
-            value,
-            target: targets,
-            type: "encrypted",
-          }),
-        }
+        { projectId, body: { key, value, target, type: "encrypted" } },
+        await this.authHeader()
       );
       this.onDidEnvironmentsUpdated();
     },
@@ -151,34 +146,33 @@ export class VercelManager {
      * @param id A string corresponding to the Vercel ID of the env variable
      */
     remove: async (id: string) => {
-      await Api.environment.remove(
-        {
-          projectId: this.selectedProject,
-          id,
-        },
-        await this.authHeader()
-      );
+      const projectId = this.selectedProject;
+      if (!projectId)
+        return void window.showErrorMessage("No project selected!");
+      await Api.environment.remove({ projectId, id }, await this.authHeader());
       this.onDidEnvironmentsUpdated();
     },
     /**
      *
      * @param id A string corresponding the ID of the Environment Variable
      * @param value The value to set the Variable to
-     * @param {("development" | "preview" | "production")[]} targets Deployment targets to set to
+     * @param targets Deployment targets to set to
      */
-    edit: async (id: string, value: string, targets: string[]) => {
+    edit: async (id: string, value: string, targets: VercelTargets[]) => {
+      const selectedProject = this.selectedProject;
+      if (!selectedProject)
+        return void window.showErrorMessage("No project selected!");
       await Api.environment.edit(
         {
-          projectId: this.selectedProject,
+          projectId: selectedProject,
           id,
+          body: {
+            value,
+            target: targets,
+          },
         },
         {
           headers: (await this.authHeader()).headers,
-
-          body: JSON.stringify({
-            value,
-            target: targets,
-          }),
         }
       );
       this.onDidEnvironmentsUpdated();

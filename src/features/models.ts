@@ -87,12 +87,11 @@ type Pagination = {
   next: number; //Timestamp that must be used to request the next page.
   prev: number; //Timestamp that must be used to request the previous page.
 };
-type targets =
-  | ("production" | "preview" | "development" | "preview" | "development")[]
-  | ("production" | "preview" | "development" | "preview" | "development");
+export const vercelTargets = ["production", "preview", "development"] as const;
+export type VercelTargets = (typeof vercelTargets)[number];
 
 export type VercelEnvironmentInformation = {
-  target?: targets;
+  target?: VercelTargets | VercelTargets[];
   type?: "secret" | "system" | "encrypted" | "plain";
   id?: string;
   key?: string;
