@@ -11,7 +11,8 @@ export class OpenDeploymentsLink implements Command {
     const user = await this.vercel.user.getInfo();
     if (!user)
       return void vscode.window.showErrorMessage("Could not get user info!");
-    const url = `https://vercel.com/${user.username}/${projectInfo.name}`;
-    await vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(url));
+    const base = vscode.Uri.parse("https://vercel.com");
+    const url = vscode.Uri.joinPath(base, user.username, projectInfo.name);
+    await vscode.env.openExternal(url);
   }
 }

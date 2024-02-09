@@ -276,20 +276,7 @@
     ]
   },
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:vercel.dev",
-    "onCommand:vercel.logIn",
-    "onCommand:vercel.logOut",
-    "onCommand:vercel.copyURL",
-    "onCommand:vercel.refreshDeployments",
-    "onCommand:vercel.refreshEnvironment",
-    "onCommand:vercel.setEnvironment",
-    "onCommand:vercel.removeEnvironment",
-    "onCommand:vercel.createEnvironment",
-    "onCommand:vercel.openEnvironmentLink",
-    "onCommand:vercel.openDeploymentsLink",
-    "onCommand:vercel.vercelLink",
-    "onCommand:vercel.deploy"
+    "onStartupFinished"
   ],
   "dependencies": {
     "async-listen": "^3.0.1",
