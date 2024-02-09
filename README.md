@@ -26,6 +26,7 @@ This extension will automatically detect any project with a `.vercel/project.jso
 If you already have the Vercel CLI installed, run `vercel link` in your terminal or use the button on the side panel to connect to a Vercel project.
 
 Run the `Log in` command to log into your vercel account.
+Note: When using the CLI, you may need to log in a second time.
 
 ## Extension Settings
 
