@@ -5,8 +5,9 @@ export type Meta<T extends Provider> = {
   [K in MetaKeys<T>]: string;
 };
 
-type Provider = "bitbucket" | "github" | "gitlab";
-type MetaStates =
+export const Providers = ["bitbucket", "github", "gitlab"] as const;
+export type Provider = (typeof Providers)[number];
+export type MetaStates =
   | "CommitAuthorName"
   | "CommitMessage"
   | "CommitOrg"
@@ -19,7 +20,7 @@ type MetaStates =
   | "Repo"
   | "RepoId"
   | "CommitAuthorLogin";
-type MetaKeys<T extends Provider> = `${T}${MetaStates}`;
+export type MetaKeys<T extends Provider> = `${T}${MetaStates}`;
 
 export type Deployment = {
   /** The unique identifier of the deployment. */

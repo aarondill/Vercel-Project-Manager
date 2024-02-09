@@ -12,25 +12,16 @@ export async function activate(context: vscode.ExtensionContext) {
     onAuthStateChanged: state =>
       vscode.commands.executeCommand("setContext", "vercelLoggedIn", state),
   });
-
   const vercel = new VercelManager(token);
-
-  const deployments = new DeploymentsProvider(vercel);
-  const environment = new EnvironmentProvider(vercel);
-
   vscode.window.createTreeView("vercel-deployments", {
-    treeDataProvider: deployments,
+    treeDataProvider: new DeploymentsProvider(vercel),
     showCollapseAll: true,
   });
-
   vscode.window.createTreeView("vercel-environment", {
-    treeDataProvider: environment,
+    treeDataProvider: new EnvironmentProvider(vercel),
     showCollapseAll: true,
   });
-
-  // activate status bar icon
   context.subscriptions.push(new StatusBar(vercel));
-
   context.subscriptions.push(registerCommands(vercel));
 }
 function registerCommands(vercel: VercelManager): vscode.Disposable {

@@ -16,19 +16,13 @@ class DeploymentItem extends vscode.TreeItem {
     const formatted = formatDate(d);
     super(formatted, vscode.TreeItemCollapsibleState.Collapsed);
     // Set tooltip to commit message, if  applicable, else to "Deployed by ${source}"
-    if (
-      data.source === "git" &&
-      data.meta &&
-      Object.keys(data.meta).length !== 0
-    ) {
+    if (data.source === "git" && data.meta) {
       const commit = getCommit(data.meta);
-      if (commit !== null) {
-        this.tooltip = commit.message;
-      }
+      if (commit) this.tooltip = commit.message;
     }
-    if (this.tooltip === undefined && data.source) {
+    if (!this.tooltip && data.source)
       this.tooltip = "Deployed by " + data.source;
-    }
+
     switch (data.state) {
       case "READY":
         this.iconPath = new vscode.ThemeIcon(

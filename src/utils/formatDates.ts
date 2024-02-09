@@ -1,27 +1,21 @@
-const dateOptions = {
-  month: "numeric",
-  day: "numeric",
-  year: "2-digit",
-  hour: "numeric",
-  minute: "numeric",
-} as Intl.DateTimeFormatOptions;
+import { objectKeys } from "tsafe";
+
 /** Format Dates like 12/31/2022 10:31 PM */
 export function formatDate(
   date: Date,
   options?: Intl.DateTimeFormatOptions
 ): string {
-  return date.toLocaleDateString("en-US", options ?? dateOptions);
+  options ??= {
+    month: "numeric",
+    day: "numeric",
+    year: "2-digit",
+    hour: "numeric",
+    minute: "numeric",
+  };
+  return date.toLocaleDateString(undefined, options);
 }
 
-const units: { unit: Intl.RelativeTimeFormatUnit; ms: number }[] = [
-  { unit: "year", ms: 31536000000 },
-  { unit: "month", ms: 2628000000 },
-  { unit: "day", ms: 86400000 },
-  { unit: "hour", ms: 3600000 },
-  { unit: "minute", ms: 60000 },
-  { unit: "second", ms: 1000 },
-];
-const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
 
 /**
  * Get language-sensitive relative time message from Dates.
@@ -30,14 +24,10 @@ const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
  * @param pivot     - the dateTime of reference, generally is the current time
  */
 export function relativeTimeFromDates(
-  relative: Date | null,
+  relative: Date,
   pivot: Date = new Date()
 ): string {
-  if (!relative) {
-    return "";
-  }
-  const elapsed = relative.getTime() - pivot.getTime();
-  return relativeTimeFromElapsed(elapsed);
+  return relativeTimeFromElapsed(relative.getTime() - pivot.getTime());
 }
 
 /**
@@ -45,10 +35,14 @@ export function relativeTimeFromDates(
  * @param elapsed   - the elapsed time in milliseconds
  */
 export function relativeTimeFromElapsed(elapsed: number): string {
-  for (const { unit, ms } of units) {
-    if (Math.abs(elapsed) >= ms || unit === "second") {
-      return rtf.format(Math.round(elapsed / ms), unit);
-    }
-  }
-  return "";
+  const second = 1000,
+    minute = 60 * second,
+    hour = 60 * minute,
+    day = 24 * hour,
+    month = 30 * day,
+    year = 12 * month;
+  const units = { year, month, day, hour, minute, second } as const;
+  const unit =
+    objectKeys(units).find(u => Math.abs(elapsed) < units[u]) ?? "second";
+  return rtf.format(Math.round(elapsed / units[unit]), unit);
 }

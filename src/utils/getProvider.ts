@@ -1,12 +1,7 @@
-export function getProvider(input: Record<string, string>) {
-  const firstKey = Object.keys(input)[0];
-  if (firstKey.includes("bitbucket")) {
-    return "bitbucket" as const;
-  } else if (firstKey.includes("github")) {
-    return "github" as const;
-  } else if (firstKey.includes("gitlab")) {
-    return "gitlab" as const;
-  }
+import { Providers, type Provider } from "../features/models";
 
-  throw Error("unspported git platform");
+// Returns null if the input is not a supported git provider
+export function getProvider(input: Record<string, string>): Provider | null {
+  const firstKey = Object.keys(input)[0];
+  return Providers.find(p => firstKey.startsWith(p)) ?? null;
 }

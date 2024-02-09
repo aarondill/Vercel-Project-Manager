@@ -2,49 +2,18 @@ import { Commit } from "../features/Commit";
 import type { Meta } from "../features/models";
 import { getProvider } from "./getProvider";
 
-export function getCommit(input: Record<string, string>) {
-  try {
-    const provider = getProvider(input);
-
-    switch (provider) {
-      case "bitbucket": {
-        const meta = input as Meta<"bitbucket">;
-        return new Commit(
-          provider,
-          meta.bitbucketCommitSha,
-          meta.bitbucketCommitMessage,
-          meta.bitbucketCommitAuthorName,
-          meta.bitbucketRepo,
-          meta.bitbucketOrg,
-          meta.bitbucketCommitRef
-        );
-      }
-      case "github": {
-        const meta = input as Meta<"github">;
-        return new Commit(
-          provider,
-          meta.githubCommitSha,
-          meta.githubCommitMessage,
-          meta.githubCommitAuthorName,
-          meta.githubRepo,
-          meta.githubOrg,
-          meta.githubCommitRef
-        );
-      }
-      case "gitlab": {
-        const meta = input as Meta<"gitlab">;
-        return new Commit(
-          provider,
-          meta.gitlabCommitSha,
-          meta.gitlabCommitMessage,
-          meta.gitlabCommitAuthorName,
-          meta.gitlabRepo,
-          meta.gitlabOrg,
-          meta.gitlabCommitRef
-        );
-      }
-    }
-  } catch (e) {
-    return null;
-  }
+export function getCommit(input: Record<string, string>): Commit | undefined {
+  if (Object.keys(input).length !== 0) return;
+  const provider = getProvider(input);
+  if (!provider) return;
+  const meta = input as Meta<typeof provider>;
+  return new Commit(
+    provider,
+    meta[`${provider}CommitSha`],
+    meta[`${provider}CommitMessage`],
+    meta[`${provider}CommitAuthorName`],
+    meta[`${provider}Repo`],
+    meta[`${provider}Org`],
+    meta[`${provider}CommitRef`]
+  );
 }

@@ -294,6 +294,7 @@
   "dependencies": {
     "node-fetch": "^3.3.1",
     "timeago.js": "^4.0.2",
+    "tsafe": "^1.6.6",
     "urlcat": "^3.1.0",
     "which": "^4.0.0"
   },

@@ -1,5 +1,9 @@
 import * as vscode from "vscode";
 import { parseError } from "../utils/parseError";
+import path from "path";
+import { unlink } from "fs";
+import { typeGuard } from "tsafe";
+import { parseJsonObject } from "../utils/jsonParse";
 
 export class TokenManager {
   private readonly authKey = "vercel_token";
@@ -108,30 +112,21 @@ export class TokenManager {
   private getProjectIdFromJson = async (
     uri?: vscode.Uri
   ): Promise<string | undefined> => {
-    if (!vscode.workspace.workspaceFolders?.[0]) {
-      return undefined;
+    let fileUri = uri;
+    if (!fileUri) {
+      const currentFolder = vscode.workspace.workspaceFolders?.[0];
+      if (!currentFolder) return;
+      const wf = currentFolder.uri.path;
+      const filePath = path.posix.join(wf, ".vercel", "project.json"); // posix join bc Uris}
+      fileUri = vscode.Uri.file(filePath);
     }
-    const wf = vscode.workspace.workspaceFolders[0].uri.path;
-    const filePath = `${wf}/.vercel/project.json`;
-    const fileUri: vscode.Uri = uri ?? vscode.Uri.file(filePath);
-    let vercelProjectJson: Uint8Array | null = null;
-    try {
-      vercelProjectJson = await vscode.workspace.fs.readFile(fileUri);
-    } catch {
-      return undefined;
-    }
-    try {
-      const stringJson: string =
-        Buffer.from(vercelProjectJson).toString("utf8");
-      const parsedVercelJSON: { projectId?: string } = JSON.parse(
-        stringJson
-      ) as {
-        projectId?: string;
-      };
-      return parsedVercelJSON.projectId;
-    } catch (error) {
-      await vscode.window.showErrorMessage(parseError(error));
-      return undefined;
-    }
+    const vercelProjectJson = await vscode.workspace.fs.readFile(fileUri).then(
+      x => x,
+      () => null
+    );
+    if (!vercelProjectJson) return;
+    const stringJson = Buffer.from(vercelProjectJson).toString("utf8");
+    const parsed = parseJsonObject<{ projectId: string }>(stringJson);
+    if (typeof parsed?.projectId === "string") return parsed.projectId;
   };
 }
