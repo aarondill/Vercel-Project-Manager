@@ -20,11 +20,13 @@ export class VercelManager {
 
   private projectInfo: VercelResponse.info.project | null = null;
   private userInfo: VercelResponse.info.User | null = null;
+  private api: Api;
 
   public constructor(private readonly token: TokenManager) {
-    const refreshRate = workspace
-      .getConfiguration("vercel")
-      .get("RefreshRate") as number;
+    this.api = new Api(token);
+    const refreshRate = Number(
+      workspace.getConfiguration("vercel").get("RefreshRate")
+    );
     setInterval(
       () => {
         this.onDidDeploymentsUpdated();
@@ -42,9 +44,12 @@ export class VercelManager {
       this.userInfo = null;
     };
   }
+  async loggedIn() {
+    return !!(await this.token.getAuth())?.accessToken;
+  }
 
   async logIn(): Promise<boolean> {
-    const apiToken = await getTokenOauth();
+    const apiToken = await getTokenOauth(this.api);
     if (!apiToken) return false;
     await this.token.setAuth(apiToken);
     this.onDidDeploymentsUpdated();
@@ -69,18 +74,6 @@ export class VercelManager {
   get selectedProject() {
     return this.token.getProject();
   }
-  /** Utility getter to return authentication token */
-  get auth() {
-    return this.token.getAuth();
-  }
-  /** Utility getter to return the proper fetch options for authentication  */
-  private async authHeader() {
-    const auth = await this.auth;
-    if (!auth) throw new Error("Not authenticated. Ensure user is logged in!");
-    return {
-      headers: { Authorization: `Bearer ${auth}` },
-    };
-  }
 
   project = {
     getInfo: async (refresh: boolean = false) => {
@@ -88,9 +81,9 @@ export class VercelManager {
       const selectedProject = this.selectedProject;
       if (!selectedProject)
         return void window.showErrorMessage("No project selected!");
-      const result = await Api.projectInfo(
+      const result = await this.api.projectInfo(
         { projectId: selectedProject },
-        await this.authHeader()
+        {}
       );
       if (!result.ok) return;
       return (this.projectInfo = result);
@@ -99,7 +92,7 @@ export class VercelManager {
   user = {
     getInfo: async (refresh: boolean = false) => {
       if (this.userInfo !== null && !refresh) return this.userInfo;
-      const response = await Api.userInfo({}, await this.authHeader());
+      const response = await this.api.userInfo(undefined, undefined);
       if (!response.ok) return;
       return (this.userInfo = response.user);
     },
@@ -111,10 +104,10 @@ export class VercelManager {
      * or undefined if no project is selected or no user is authenticated
      */
     getAll: async (): Promise<VercelEnvironmentInformation[]> => {
-      if (!(await this.auth) || !this.selectedProject) return [];
-      const response = await Api.environment.getAll(
+      if (!this.selectedProject) return [];
+      const response = await this.api.environment.getAll(
         { projectId: this.selectedProject },
-        await this.authHeader()
+        undefined
       );
       if (!response.ok) return (this.envList = []);
       const r = "envs" in response ? response.envs ?? [] : [response];
@@ -134,9 +127,9 @@ export class VercelManager {
       const projectId = this.selectedProject;
       if (!projectId)
         return void window.showErrorMessage("No project selected!");
-      await Api.environment.create(
+      await this.api.environment.create(
         { projectId, body: { key, value, target, type: "encrypted" } },
-        await this.authHeader()
+        undefined
       );
       this.onDidEnvironmentsUpdated();
     },
@@ -149,7 +142,7 @@ export class VercelManager {
       const projectId = this.selectedProject;
       if (!projectId)
         return void window.showErrorMessage("No project selected!");
-      await Api.environment.remove({ projectId, id }, await this.authHeader());
+      await this.api.environment.remove({ projectId, id }, undefined);
       this.onDidEnvironmentsUpdated();
     },
     /**
@@ -162,18 +155,9 @@ export class VercelManager {
       const selectedProject = this.selectedProject;
       if (!selectedProject)
         return void window.showErrorMessage("No project selected!");
-      await Api.environment.edit(
-        {
-          projectId: selectedProject,
-          id,
-          body: {
-            value,
-            target: targets,
-          },
-        },
-        {
-          headers: (await this.authHeader()).headers,
-        }
+      await this.api.environment.edit(
+        { projectId: selectedProject, id, body: { value, target: targets } },
+        undefined
       );
       this.onDidEnvironmentsUpdated();
     },
@@ -191,18 +175,15 @@ export class VercelManager {
      * user or empty list if either doesn't exist
      */
     getAll: async () => {
-      if (!this.selectedProject || !(await this.auth)) return [];
+      if (!this.selectedProject) return [];
       try {
         this.fetchingDeployments = true;
         const limit = workspace
           .getConfiguration("vercel")
           .get("DeploymentCount") as number;
-        const data = await Api.deployments(
-          {
-            projectId: this.selectedProject,
-            limit: limit ?? 20,
-          },
-          await this.authHeader()
+        const data = await this.api.deployments(
+          { projectId: this.selectedProject, limit: limit ?? 20 },
+          undefined
         );
         if (!data.ok) return (this.deploymentsList = []);
         const r = data.deployments ?? [];

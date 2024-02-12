@@ -19,7 +19,7 @@ export class RemoveEnvironment implements Command {
   public readonly id = "vercel.removeEnvironment";
   constructor(private readonly vercel: VercelManager) {}
   async execute(command?: { envId: string; key: string }) {
-    if (!((await this.vercel.auth) && this.vercel.selectedProject)) return;
+    if (!this.vercel.selectedProject) return;
     //> Get information from arguments if given
     let id: string | undefined = command?.envId;
     let key: string | undefined = command?.key;

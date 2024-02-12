@@ -10,6 +10,8 @@ import type {
   VercelTargets,
 } from "../features/models";
 import { objectKeys, typeGuard } from "tsafe";
+import type { TokenManager } from "../features/TokenManager";
+import type { OauthResult } from "./oauth";
 
 /** The default TRet */
 type TRetType = Record<PropertyKey, unknown> | unknown[];
@@ -17,7 +19,6 @@ type TRetType = Record<PropertyKey, unknown> | unknown[];
 type TRequiredType = ParamMap | undefined;
 /** The default TRequiredFetch */
 type TRequiredFetchType = RequestInit | undefined;
-type AuthHeaders = { headers: { Authorization: string } };
 type RequestHook<TRequired, TRequiredFetch> = <
   Params extends ParamMap & TRequired,
   Req extends RequestInit & TRequiredFetch,
@@ -28,22 +29,20 @@ type RequestHook<TRequired, TRequiredFetch> = <
 }) => { params: ParamMap; req: RequestInit } | undefined | null | void;
 
 export class Api {
+  constructor(private token: TokenManager) {}
   /** Combines two objects, combining any object properties down one level
    * eg. {a: 1, b: { num: 2 }} and {c: 3, a: 4, b: { num2: 5 }}
    * {a: 4, b: {num: 2, num2: 5}, c: 3 }
    * Any non-object properties are overwritten if on a, or overwrite if on b.
    * Both arguments should be objects. if they are not objects, you will likely get an empty object back.
    */
-  private static mergeHeaders<A extends object>(a: A, b?: undefined): A;
-  private static mergeHeaders<A extends object, B extends object>(
-    a: A,
-    b: B
-  ): A & B; // This isn't *quite* correct, but it works for now.
-  private static mergeHeaders<A extends object, B extends object | undefined>(
+  private mergeHeaders<A extends object>(a: A, b?: undefined): A;
+  private mergeHeaders<A extends object, B extends object>(a: A, b: B): A & B; // This isn't *quite* correct, but it works for now.
+  private mergeHeaders<A extends object, B extends object | undefined>(
     a: A,
     b?: B
   ): A & B;
-  private static mergeHeaders<A extends object, B extends object | undefined>(
+  private mergeHeaders<A extends object, B extends object | undefined>(
     a: A,
     b?: B
   ) {
@@ -65,8 +64,13 @@ export class Api {
     return r;
   }
 
-  private static baseUrl = "https://api.vercel.com";
-  private static base(path?: string, query?: ParamMap) {
+  /** Utility getter to return the proper fetch options for authentication  */
+  private async authHeader(auth: OauthResult) {
+    return { headers: { Authorization: `Bearer ${auth.accessToken}` } };
+  }
+
+  private baseUrl = "https://api.vercel.com";
+  private base(path?: string, query?: ParamMap) {
     return urlcat(this.baseUrl, path ?? "", query ?? {});
   }
 
@@ -79,18 +83,20 @@ export class Api {
    * @typeparam TRequired is the required query parameters for the API call
    * @typeparam TRequiredFetch is the required fetch options for the API call
    */
-  private static init<
+  private init<
     TRet extends TRetType = TRetType,
     TRequired extends TRequiredType = TRequiredType,
     TRequiredFetch extends TRequiredFetchType = TRequiredFetchType,
   >(initial: {
     path: string;
     params?: ParamMap;
+    authorization?: boolean;
     fetch?: RequestInit;
     hook?: RequestHook<TRequired, TRequiredFetch>;
   }) {
     const initOpt = initial.params ?? {};
     const initFetchOpt = initial.fetch ?? {};
+    const useAuth = initial.authorization ?? true;
     const { path, hook } = initial;
     type Ret = (TRet & { ok: true }) | (VercelResponse.error & { ok: false });
     //> Returns a function for fetching
@@ -100,7 +106,15 @@ export class Api {
     ): Promise<Ret> => {
       options ??= {} as typeof options;
       const mergedOptions = { ...initOpt, ...options };
-      const mergedFetchOptions = this.mergeHeaders(initFetchOpt, fetchOptions);
+      let mergedFetchOptions = this.mergeHeaders(initFetchOpt, fetchOptions);
+      if (useAuth) {
+        const auth = await this.token.getAuth();
+        if (!auth?.accessToken)
+          throw new Error("Not authenticated. Ensure user is logged in!");
+        const authHeader = this.authHeader(auth);
+        mergedFetchOptions = this.mergeHeaders(mergedFetchOptions, authHeader);
+        mergedOptions.teamId = auth.teamId;
+      }
 
       // Final merged after hook. Note: these have a broader type to allow hook to return anything.
       let finalOptions: ParamMap = mergedOptions,
@@ -149,41 +163,37 @@ export class Api {
     };
   }
 
-  public static deployments = this.init<
+  public deployments = this.init<
     VercelResponse.deployment,
-    { projectId: string; limit?: number },
-    AuthHeaders
+    { projectId: string; limit?: number; teamId?: string }
   >({
     path: "/v6/deployments",
     fetch: {
       method: "GET",
     },
   });
-  public static projectInfo = this.init<
+  public projectInfo = this.init<
     VercelResponse.info.project,
-    { projectId: string },
-    AuthHeaders
+    { projectId: string; teamId?: string }
   >({
     path: "/v9/projects/:projectId",
     fetch: {
       method: "GET",
     },
   });
-  public static userInfo = this.init<
+  public userInfo = this.init<
     VercelResponse.info.user,
-    TRequiredType,
-    AuthHeaders
+    { teamId?: string } | undefined
   >({
     path: "/v2/user",
     fetch: {
       method: "GET",
     },
   });
-  public static environment = {
+  public environment = {
     getAll: this.init<
       VercelResponse.environment.getAll,
-      { projectId: string },
-      AuthHeaders
+      { projectId: string; teamId?: string }
     >({
       path: "/v8/projects/:projectId/env",
       params: { decrypt: "true" },
@@ -193,8 +203,7 @@ export class Api {
     }),
     remove: this.init<
       VercelResponse.environment.remove,
-      { projectId: string; id: string },
-      AuthHeaders
+      { projectId: string; id: string; teamId?: string }
     >({
       path: "/v9/projects/:projectId/env/:id",
       fetch: {
@@ -211,8 +220,8 @@ export class Api {
           target: VercelTargets[];
           type: NonNullable<VercelEnvironmentInformation["type"]>;
         };
-      },
-      AuthHeaders
+        teamId?: string;
+      }
     >({
       hook: o => ({
         // turn the body param into a URLSearchParams object
@@ -230,8 +239,8 @@ export class Api {
         projectId: string;
         id: string;
         body: { value: string; target: VercelTargets[] };
-      },
-      { headers: { Authorization: string } }
+        teamId?: string;
+      }
     >({
       hook: o => ({
         // turn the body param into a URLSearchParams object
@@ -244,7 +253,7 @@ export class Api {
       },
     }),
   };
-  public static oauth = {
+  public oauth = {
     accessToken: this.init<
       VercelResponse.oauth.accessToken,
       {
@@ -254,6 +263,7 @@ export class Api {
           client_id: string;
           client_secret: string;
         };
+        teamId?: string;
       }
     >({
       hook: o => ({
@@ -262,6 +272,7 @@ export class Api {
         params: { ...o.params, body: undefined },
       }),
       path: "/v2/oauth/access_token",
+      authorization: false, // The user doesn't need to be authorized to use this endpoint!
       fetch: {
         method: "POST",
         headers: {

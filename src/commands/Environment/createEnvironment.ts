@@ -8,7 +8,7 @@ export class CreateEnvironment implements Command {
   public readonly id = "vercel.createEnvironment";
   constructor(private readonly vercel: VercelManager) {}
   async execute() {
-    if (!((await this.vercel.auth) && this.vercel.selectedProject)) return;
+    if (!this.vercel.selectedProject) return;
 
     const envlist = (await this.vercel.env.getEnvList())?.map(x => x.key);
     if (!envlist) throw new Error("Failed to get environment list");

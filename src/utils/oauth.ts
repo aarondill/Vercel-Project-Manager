@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import http from "http";
-import { Api } from "./Api";
+import type { Api } from "./Api";
 import { listen } from "async-listen";
 // These are constants configured in the vercel dashboard. They must match those values!
 const OAUTH_PORT = 9615;
@@ -51,38 +52,45 @@ async function doOauth(
     server.close();
   }
 }
-async function getTokenFromCode(code: string): Promise<string | undefined> {
-  const res = await Api.oauth.accessToken(
+export type OauthResult = { accessToken: string; teamId: string | null };
+async function getTokenFromCode(
+  code: string,
+  api: Api
+): Promise<OauthResult | undefined> {
+  const res = await api.oauth.accessToken(
     {
       body: {
         code: code,
-        redirect_uri: OAUTH_URL, // eslint-disable-line @typescript-eslint/naming-convention
-        client_id: CLIENT_ID, // eslint-disable-line @typescript-eslint/naming-convention
-        client_secret: CLIENT_SEC, // eslint-disable-line @typescript-eslint/naming-convention
+        redirect_uri: OAUTH_URL,
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SEC,
       },
     },
     undefined
   );
   if (!res.ok) return;
-  return res.access_token;
+  const { access_token, team_id } = res; // eslint-disable-line @typescript-eslint/naming-convention
+  return { accessToken: access_token, teamId: team_id };
 }
-export async function getTokenOauth() {
+export async function getTokenOauth(
+  api: Api
+): Promise<OauthResult | undefined> {
   // Check well known ip before starting a server and a browser
   const req = await fetch("https://1.1.1.1").catch(() => null);
   if (!req?.ok) {
     const msg = `Failed to authenticate with Vercel (Network error!). ${req?.statusText}`;
-    return await vscode.window.showErrorMessage(msg);
+    return void vscode.window.showErrorMessage(msg);
   }
   const resUrl = await doOauth(OAUTH_PORT, OAUTH_PATH);
   const code = resUrl.searchParams.get("code");
   if (!code) {
     const msg = "Failed to authenticate with Vercel (Couldn't get code).";
-    return await vscode.window.showErrorMessage(msg);
+    return void vscode.window.showErrorMessage(msg);
   }
-  const accessToken = await getTokenFromCode(code);
-  if (!accessToken) {
+  const accessToken = await getTokenFromCode(code, api);
+  if (!accessToken?.accessToken) {
     const msg = `Failed to authenticate with Vercel. (Couldn't get access token)`;
-    return await vscode.window.showErrorMessage(msg);
+    return void vscode.window.showErrorMessage(msg);
   }
   return accessToken;
 }
