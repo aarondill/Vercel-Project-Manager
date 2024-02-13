@@ -1,9 +1,11 @@
 import * as vscode from "vscode";
 import path from "path";
 import { parseJsonObject } from "../utils/jsonParse";
+import type { OauthResult } from "../utils/oauth";
 
 export class TokenManager {
   private readonly authKey = "vercel_token";
+  private readonly teamIdKey = "vercel_team_id";
   private readonly projectKey = "vercel_selected_project";
 
   private readonly onAuthStateChanged: (state: boolean) => void;
@@ -80,14 +82,21 @@ export class TokenManager {
     });
   }
 
-  setAuth(token: string | undefined) {
+  async setAuth(token: OauthResult | undefined) {
     this.onAuthStateChanged(!!token);
-    if (token === undefined) return this.secrets.delete(this.authKey);
-    return this.secrets.store(this.authKey, token);
+    if (token?.accessToken)
+      await this.secrets.store(this.authKey, token.accessToken);
+    else await this.secrets.delete(this.authKey);
+
+    if (token?.teamId) await this.secrets.store(this.teamIdKey, token.teamId);
+    else await this.secrets.delete(this.authKey);
   }
 
-  getAuth(): Thenable<string | undefined> {
-    return this.secrets.get(this.authKey);
+  async getAuth(): Promise<OauthResult | undefined> {
+    const accessToken = await this.secrets.get(this.authKey);
+    if (!accessToken) return undefined; // We will never have a (valid) teamid without a token!
+    const teamId = (await this.secrets.get(this.teamIdKey)) ?? null;
+    return { accessToken, teamId };
   }
 
   async setProject(token: string | undefined) {

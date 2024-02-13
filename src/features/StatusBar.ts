@@ -44,7 +44,7 @@ export class StatusBar {
   }
 
   public async updateStatus(): Promise<void> {
-    if (!(await this.vercel.auth)) {
+    if (!(await this.vercel.loggedIn())) {
       this.text = "Login";
       this.tooltip = "Click to login";
       return;
