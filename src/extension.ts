@@ -10,10 +10,7 @@ import * as log from "./logging";
 
 export async function activate(context: vscode.ExtensionContext) {
   log.activate(context); // do this first so it's available
-  const token = new TokenManager(context, {
-    onAuthStateChanged: state =>
-      vscode.commands.executeCommand("setContext", "vercelLoggedIn", state),
-  });
+  const token = new TokenManager(context);
   const vercel = new VercelManager(token);
   vscode.window.createTreeView("vercel-deployments", {
     treeDataProvider: new DeploymentsProvider(vercel),

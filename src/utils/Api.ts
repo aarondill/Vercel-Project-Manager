@@ -13,6 +13,7 @@ import { objectKeys, typeGuard } from "tsafe";
 import type { TokenManager } from "../features/TokenManager";
 import type { OauthResult } from "./oauth";
 import { log } from "../logging";
+import { inspect } from "util";
 
 /** The default TRet */
 type TRetType = Record<PropertyKey, unknown> | unknown[];
@@ -36,6 +37,7 @@ function logError<T extends VercelResponse.error>(
   const type = isServerSide ? "Vercel Server Error" : "Error";
   const msg = `${type}(${e.error?.code}): ${e.error?.message ?? "Unknown"}`;
   log(msg);
+  void window.showErrorMessage(msg);
   return { ...e, ok: false };
 }
 // Makes a request using fetch and returns the response after parsing
@@ -44,6 +46,7 @@ async function makeLoggedRequest<TRet extends TRetType>(
   opts?: RequestInit
 ): Promise<(TRet & { ok: true }) | (VercelResponse.error & { ok: false })> {
   log(`API request to ${url.toString()}`);
+  if (opts) log(`Options ${inspect(opts)}`);
   let response; // Get the fetch response
   try {
     response = await fetch(url, opts);
@@ -107,7 +110,9 @@ export class Api {
 
   /** Utility getter to return the proper fetch options for authentication  */
   private async authHeader(auth: OauthResult) {
-    return { headers: { Authorization: `Bearer ${auth.accessToken}` } };
+    return {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    } as const;
   }
 
   private baseUrl = "https://api.vercel.com";
@@ -154,9 +159,9 @@ export class Api {
             error: { code: "NOAUTH", message: "User is not authenticated." },
           });
         }
-        const authHeader = this.authHeader(auth);
+        const authHeader = await this.authHeader(auth);
         mergedFetchOptions = this.mergeHeaders(mergedFetchOptions, authHeader);
-        mergedOptions.teamId = auth.teamId;
+        if (auth.teamId) mergedOptions.teamId = auth.teamId;
       }
 
       // Final merged after hook. Note: these have a broader type to allow hook to return anything.

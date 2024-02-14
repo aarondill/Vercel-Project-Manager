@@ -3,6 +3,8 @@ import * as vscode from "vscode";
 import http from "http";
 import type { Api } from "./Api";
 import { listen } from "async-listen";
+import { once } from "events";
+import { log } from "../logging";
 // These are constants configured in the vercel dashboard. They must match those values!
 const OAUTH_PORT = 9615;
 const OAUTH_PATH = "/oauth-complete";
@@ -12,16 +14,22 @@ const CLIENT_SEC = "NPBb5J2ZNrlhX3W98DCPS1o1";
 
 const vercelSlug = "vercel-project-manager";
 
+let server: http.Server;
 /** successMessage is html */
 async function doOauth(
   port: number,
   pathname?: string // If present, will ignore all other paths
 ): Promise<URL> {
-  const server = http.createServer();
+  if (server) {
+    log(`Closing existing oauth server`);
+    server.close();
+    await once(server, "close"); // make sure the previous server is stopped before restarting it
+  }
+  server = http.createServer();
   await listen(server, port, "127.0.0.1");
   // url.searchParams.set('next', `http://localhost:${port}`);
 
-  let resolve: (value: URL) => void, reject: (reason: any) => void;
+  let resolve: (value: URL) => void, reject: (reason: Error) => void;
   const p = new Promise<URL>(
     (_resolve, _reject) => ((resolve = _resolve), (reject = _reject))
   );
@@ -81,7 +89,11 @@ export async function getTokenOauth(
     const msg = `Failed to authenticate with Vercel (Network error).`;
     return void vscode.window.showErrorMessage(msg);
   }
-  const resUrl = await doOauth(OAUTH_PORT, OAUTH_PATH);
+  const resUrl = await doOauth(OAUTH_PORT, OAUTH_PATH).catch(() => null);
+  if (!resUrl) {
+    const msg = "Failed to authenticate with Vercel (Oauth failed).";
+    return void vscode.window.showErrorMessage(msg);
+  }
   const code = resUrl.searchParams.get("code");
   if (!code) {
     const msg = "Failed to authenticate with Vercel (No code).";

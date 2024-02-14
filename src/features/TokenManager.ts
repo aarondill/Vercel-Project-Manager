@@ -2,15 +2,18 @@ import * as vscode from "vscode";
 import path from "path";
 import { parseJsonObject } from "../utils/jsonParse";
 import type { OauthResult } from "../utils/oauth";
+import { log } from "../logging";
 
 export class TokenManager {
   private readonly authKey = "vercel_token";
   private readonly teamIdKey = "vercel_team_id";
   private readonly projectKey = "vercel_selected_project";
 
-  private readonly onAuthStateChanged: (state: boolean) => void;
   private fileWatcher: vscode.FileSystemWatcher | null = null;
   private folderWatcher: vscode.FileSystemWatcher | null = null;
+
+  private readonly onAuthStateChanged = (state: boolean) =>
+    vscode.commands.executeCommand("setContext", "vercelLoggedIn", state);
 
   public onDidLogOut() {
     this.fileWatcher?.dispose();
@@ -52,28 +55,15 @@ export class TokenManager {
     await update();
     this.onProjectStateChanged();
   }
-
-  public onProjectStateChanged: (id?: string) => void;
-
+  public onProjectStateChanged: (id?: string) => void = x => x;
   private readonly globalState: vscode.Memento;
   private readonly secrets: vscode.SecretStorage;
-  constructor(
-    { globalState, secrets }: vscode.ExtensionContext,
-    {
-      onAuthStateChanged,
-      onProjectStateChanged,
-    }: {
-      onAuthStateChanged?: (state: boolean) => void;
-      onProjectStateChanged?: (id?: string) => void;
-    }
-  ) {
+  constructor({ globalState, secrets }: vscode.ExtensionContext) {
     this.globalState = globalState;
     this.secrets = secrets;
-    this.onAuthStateChanged = onAuthStateChanged ?? (x => x);
-    this.onProjectStateChanged = onProjectStateChanged ?? (x => x);
     // initial run
     void this.getAuth().then(auth => {
-      this.onAuthStateChanged(!!auth);
+      void this.onAuthStateChanged(!!auth);
       this.onDidLogIn().catch(e =>
         vscode.window.showErrorMessage(
           `error while running DidLogIn handler: ${String(e)}`
