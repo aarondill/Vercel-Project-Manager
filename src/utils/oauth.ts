@@ -78,18 +78,18 @@ export async function getTokenOauth(
   // Check well known ip before starting a server and a browser
   const req = await fetch("https://1.1.1.1").catch(() => null);
   if (!req?.ok) {
-    const msg = `Failed to authenticate with Vercel (Network error!). ${req?.statusText}`;
+    const msg = `Failed to authenticate with Vercel (Network error).`;
     return void vscode.window.showErrorMessage(msg);
   }
   const resUrl = await doOauth(OAUTH_PORT, OAUTH_PATH);
   const code = resUrl.searchParams.get("code");
   if (!code) {
-    const msg = "Failed to authenticate with Vercel (Couldn't get code).";
+    const msg = "Failed to authenticate with Vercel (No code).";
     return void vscode.window.showErrorMessage(msg);
   }
   const accessToken = await getTokenFromCode(code, api);
   if (!accessToken?.accessToken) {
-    const msg = `Failed to authenticate with Vercel. (Couldn't get access token)`;
+    const msg = `Failed to authenticate with Vercel. (No access token)`;
     return void vscode.window.showErrorMessage(msg);
   }
   return accessToken;
