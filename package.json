@@ -1,7 +1,7 @@
 {
   "name": "vercel-project-manager-vscode",
   "displayName": "Vercel Project Manager",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "private": true,
   "description": "Manage Vercel Projects from VSCode",
   "categories": [
