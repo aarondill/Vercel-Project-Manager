@@ -36,6 +36,11 @@
   "contributes": {
     "commands": [
       {
+        "command": "vercel.debug",
+        "category": "Vercel Project Manager",
+        "title": "Output debugging information"
+      },
+      {
         "command": "vercel.dev",
         "category": "Vercel Project Manager",
         "title": "Run a development server through Vercel"
@@ -152,6 +157,9 @@
         {
           "command": "vercel.copyURL",
           "when": "false"
+        },
+        {
+          "command": "vercel.debug"
         },
         {
           "command": "vercel.dev"

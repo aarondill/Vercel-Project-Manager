@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // 👆 because vercel API requires snake_case keys
-import { window, workspace } from "vscode";
+import { env, window, workspace } from "vscode";
 import { Api } from "../utils/Api";
 import type { TokenManager } from "./TokenManager";
 import type {
@@ -44,8 +44,18 @@ export class VercelManager {
       this.userInfo = null;
     };
   }
-  async loggedIn() {
-    return !!(await this.token.getAuth())?.accessToken;
+  loggedIn = async () => !!(await this.token.getAuth())?.accessToken;
+  async debug(): Promise<void> {
+    const msg = [
+      `Logged in: ${await this.loggedIn()}`,
+      `Environment list (cached): ${this.envList?.toString()}`,
+      `Project information (cached): ${this.projectInfo?.toString()}`,
+      `User vercel information (cached): ${this.userInfo?.toString()}`,
+      `Selected project id: ${this.selectedProject}`,
+      `Authentication: ${(await this.token.getAuth())?.toString()}`,
+    ].join(",\n");
+    const act = await window.showInformationMessage(msg, "Copy");
+    if (act === "Copy") return await env.clipboard.writeText(msg);
   }
 
   async logIn(): Promise<boolean> {
@@ -114,9 +124,7 @@ export class VercelManager {
       return (this.envList = r);
     },
     /** returns the environment variable list, updating it if null */
-    getEnvList: async () => {
-      return await (this.envList ?? this.env.getAll());
-    },
+    getEnvList: async () => await (this.envList ?? this.env.getAll()),
     /**
      *
      * @param key Name of var to create
