@@ -83,18 +83,19 @@ export class TokenManager {
   }
 
   async setAuth(token: OauthResult | undefined) {
-    this.onAuthStateChanged(!!token);
-    if (token?.accessToken)
-      await this.secrets.store(this.authKey, token.accessToken);
+    const { accessToken, teamId } = token ?? {};
+    if (accessToken) await this.secrets.store(this.authKey, accessToken);
     else await this.secrets.delete(this.authKey);
 
-    if (token?.teamId) await this.secrets.store(this.teamIdKey, token.teamId);
-    else await this.secrets.delete(this.authKey);
+    if (teamId) await this.secrets.store(this.teamIdKey, teamId);
+    else await this.secrets.delete(this.teamIdKey);
+
+    await this.onAuthStateChanged(!!token);
   }
 
   async getAuth(): Promise<OauthResult | undefined> {
     const accessToken = await this.secrets.get(this.authKey);
-    if (!accessToken) return undefined; // We will never have a (valid) teamid without a token!
+    if (!accessToken) return; // We will never have a (valid) teamid without a token!
     const teamId = (await this.secrets.get(this.teamIdKey)) ?? null;
     return { accessToken, teamId };
   }
