@@ -65,6 +65,7 @@ async function makeLoggedRequest<TRet extends TRetType>(
   if (typeGuard<VercelResponse.error>(data, "error" in data)) {
     return logError(data, true);
   }
+  log(`Request successful: ${response.statusText} (${response.status})`);
   return { ...data, ok: true };
 }
 
