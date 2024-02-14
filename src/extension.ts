@@ -25,6 +25,6 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(registerCommands(vercel));
 }
 function registerCommands(vercel: VercelManager): vscode.Disposable {
-  return new CommandManager().registerAll(commands, vercel);
+  return new CommandManager(vercel).registerAll(commands);
 }
 export function deactivate() {}

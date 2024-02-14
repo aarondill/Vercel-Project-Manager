@@ -18,6 +18,7 @@ async function confirm(key: string) {
 export class RemoveEnvironment implements Command {
   public readonly id = "vercel.removeEnvironment";
   constructor(private readonly vercel: VercelManager) {}
+  dispose() {}
   async execute(command?: { envId: string; key: string }) {
     if (!this.vercel.selectedProject) return;
     //> Get information from arguments if given

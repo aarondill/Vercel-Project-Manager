@@ -22,6 +22,7 @@ async function warnDeprecatedConfig() {
 export class LogIn implements Command {
   public readonly id = "vercel.logIn";
   constructor(private readonly vercel: VercelManager) {}
+  dispose() {}
   async execute() {
     await warnDeprecatedConfig();
     await this.vercel.logIn();

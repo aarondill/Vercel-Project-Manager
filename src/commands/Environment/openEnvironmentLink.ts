@@ -5,6 +5,7 @@ import type { VercelManager } from "../../features/VercelManager";
 export class OpenEnvironmentLink implements Command {
   public readonly id = "vercel.openEnvironmentLink";
   constructor(private readonly vercel: VercelManager) {}
+  dispose() {}
   async execute() {
     const projectInfo = await this.vercel.project.getInfo();
     if (!projectInfo) return;

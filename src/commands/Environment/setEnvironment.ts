@@ -21,6 +21,7 @@ export class SetEnvironment implements Command {
     return undefined;
   }
 
+  dispose() {}
   async execute(command?: {
     id: string;
     key: string;

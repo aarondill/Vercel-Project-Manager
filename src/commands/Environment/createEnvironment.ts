@@ -7,6 +7,7 @@ import { vercelTargets } from "../../features/models";
 export class CreateEnvironment implements Command {
   public readonly id = "vercel.createEnvironment";
   constructor(private readonly vercel: VercelManager) {}
+  dispose() {}
   async execute() {
     if (!this.vercel.selectedProject) return;
 
