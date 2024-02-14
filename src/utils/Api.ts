@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { RequestInit } from "node-fetch";
+import type { RequestInfo, RequestInit } from "node-fetch";
 import fetch from "node-fetch";
 import type { ParamMap } from "urlcat";
 import urlcat from "urlcat";
@@ -29,14 +29,43 @@ type RequestHook<TRequired, TRequiredFetch> = <
   // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
 }) => { params: ParamMap; req: RequestInit } | undefined | null | void;
 
-function logError<T extends VercelResponse.error & { ok: false }>(
+function logError<T extends VercelResponse.error>(
   e: T,
   isServerSide = false
-): T {
+): T & { ok: false } {
   const type = isServerSide ? "Vercel Server Error" : "Error";
   const msg = `${type}(${e.error?.code}): ${e.error?.message ?? "Unknown"}`;
   log(msg);
-  return e;
+  return { ...e, ok: false };
+}
+// Makes a request using fetch and returns the response after parsing
+async function makeLoggedRequest<TRet extends TRetType>(
+  url: URL | RequestInfo,
+  opts?: RequestInit
+): Promise<(TRet & { ok: true }) | (VercelResponse.error & { ok: false })> {
+  log(`API request to ${url.toString()}`);
+  let response; // Get the fetch response
+  try {
+    response = await fetch(url, opts);
+  } catch (e) {
+    const message = `A Network Error Occured: ${String(e)}`;
+    return logError({ error: { code: "FetchError", message } });
+  }
+  let data; // json parse the response body
+  try {
+    data = (await response.json()) as TRet | VercelResponse.error;
+  } catch (e) {
+    const message = `Failed to parse response json: ${e?.toString()}`;
+    return logError({ error: { code: "InvalidResponse", message } });
+  }
+  if (!data || typeof data !== "object") {
+    const message = `Returned data was not an object: ${String(data)}`;
+    return logError({ error: { code: "InvalidResponse", message } });
+  }
+  if (typeGuard<VercelResponse.error>(data, "error" in data)) {
+    return logError(data, true);
+  }
+  return { ...data, ok: true };
 }
 
 export class Api {
@@ -109,12 +138,11 @@ export class Api {
     const initFetchOpt = initial.fetch ?? {};
     const useAuth = initial.authorization ?? true;
     const { path, hook } = initial;
-    type Ret = (TRet & { ok: true }) | (VercelResponse.error & { ok: false });
     //> Returns a function for fetching
     return async (
       options: TRequired & (ParamMap | undefined),
       fetchOptions: TRequiredFetch & (RequestInit | undefined)
-    ): Promise<Ret> => {
+    ) => {
       options ??= {} as typeof options;
       const mergedOptions = { ...initOpt, ...options };
       let mergedFetchOptions = this.mergeHeaders(initFetchOpt, fetchOptions);
@@ -122,7 +150,6 @@ export class Api {
         const auth = await this.token.getAuth();
         if (!auth?.accessToken) {
           return logError({
-            ok: false,
             error: { code: "NOAUTH", message: "User is not authenticated." },
           });
         }
@@ -144,29 +171,7 @@ export class Api {
       }
 
       const url = this.base(path, finalOptions);
-      const response = await fetch(url, finalFetchOptions).catch(e => ({
-        error: {
-          code: "FetchError",
-          message: `A Network Error Occured: ${e}`,
-        },
-      }));
-      if ("error" in response) return logError({ ...response, ok: false });
-      //> Check for error and tell user
-      const invalidResponseError = {
-        error: {
-          code: "InvalidResponse",
-          message: "Failed to parse response json",
-        },
-      };
-      const data =
-        (await response.json().then(
-          r => r as TRet | VercelResponse.error,
-          () => null
-        )) ?? invalidResponseError;
-      if (typeGuard<VercelResponse.error>(data, "error" in data)) {
-        return logError({ ...data, ok: false }, true);
-      }
-      return { ...data, ok: true };
+      return await makeLoggedRequest<TRet>(url, finalFetchOptions);
     };
   }
 
