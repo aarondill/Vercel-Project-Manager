@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import type { VercelManager } from "./features/VercelManager";
+import { log } from "./logging";
 
 export interface Command extends vscode.Disposable {
   readonly id: string;
@@ -63,6 +64,7 @@ export class CommandManager implements vscode.Disposable {
 
   private registerCommand = (command: Command): this => {
     const { id, execute } = command;
+    log(`Registering command ${id}`);
     if (!id) throw new Error("Command must have a non-empty id!");
     if (this.disposables.has(id)) return this;
     const disp = vscode.commands.registerCommand(id, execute, command);

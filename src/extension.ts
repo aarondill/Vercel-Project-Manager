@@ -6,8 +6,10 @@ import { EnvironmentProvider } from "./features/EnvironmentProvider";
 import { StatusBar } from "./features/StatusBar";
 import { TokenManager } from "./features/TokenManager";
 import { VercelManager } from "./features/VercelManager";
+import * as log from "./logging";
 
 export async function activate(context: vscode.ExtensionContext) {
+  log.activate(context); // do this first so it's available
   const token = new TokenManager(context, {
     onAuthStateChanged: state =>
       vscode.commands.executeCommand("setContext", "vercelLoggedIn", state),

@@ -12,6 +12,7 @@ import type {
 import { objectKeys, typeGuard } from "tsafe";
 import type { TokenManager } from "../features/TokenManager";
 import type { OauthResult } from "./oauth";
+import { log } from "../logging";
 
 /** The default TRet */
 type TRetType = Record<PropertyKey, unknown> | unknown[];
@@ -27,6 +28,16 @@ type RequestHook<TRequired, TRequiredFetch> = <
   req: Req;
   // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
 }) => { params: ParamMap; req: RequestInit } | undefined | null | void;
+
+function logError<T extends VercelResponse.error & { ok: false }>(
+  e: T,
+  isServerSide = false
+): T {
+  const type = isServerSide ? "Vercel Server Error" : "Error";
+  const msg = `${type}(${e.error?.code}): ${e.error?.message ?? "Unknown"}`;
+  log(msg);
+  return e;
+}
 
 export class Api {
   constructor(private token: TokenManager) {}
@@ -109,8 +120,12 @@ export class Api {
       let mergedFetchOptions = this.mergeHeaders(initFetchOpt, fetchOptions);
       if (useAuth) {
         const auth = await this.token.getAuth();
-        if (!auth?.accessToken)
-          throw new Error("Not authenticated. Ensure user is logged in!");
+        if (!auth?.accessToken) {
+          return logError({
+            ok: false,
+            error: { code: "NOAUTH", message: "User is not authenticated." },
+          });
+        }
         const authHeader = this.authHeader(auth);
         mergedFetchOptions = this.mergeHeaders(mergedFetchOptions, authHeader);
         mergedOptions.teamId = auth.teamId;
@@ -135,7 +150,7 @@ export class Api {
           message: `A Network Error Occured: ${e}`,
         },
       }));
-      if ("error" in response) return { ...response, ok: false };
+      if ("error" in response) return logError({ ...response, ok: false });
       //> Check for error and tell user
       const invalidResponseError = {
         error: {
@@ -149,17 +164,9 @@ export class Api {
           () => null
         )) ?? invalidResponseError;
       if (typeGuard<VercelResponse.error>(data, "error" in data)) {
-        const msg = `Vercel Server Error: ${data?.error?.message ?? "unknown error"}`;
-        void window.showErrorMessage(msg);
-        return {
-          ...data,
-          ok: false,
-        };
+        return logError({ ...data, ok: false }, true);
       }
-      return {
-        ...data,
-        ok: true,
-      };
+      return { ...data, ok: true };
     };
   }
 
