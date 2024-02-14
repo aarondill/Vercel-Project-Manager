@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import path from "path";
 import { parseJsonObject } from "../utils/jsonParse";
 import type { OauthResult } from "../utils/oauth";
-import { log } from "../logging";
 
 export class TokenManager {
   private readonly authKey = "vercel_token";

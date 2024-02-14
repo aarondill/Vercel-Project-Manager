@@ -10,8 +10,6 @@ import type {
   VercelTargets,
 } from "./models";
 import { getTokenOauth } from "../utils/oauth";
-import { log } from "../logging";
-import { inspect } from "util";
 
 export class VercelManager {
   public onDidEnvironmentsUpdated: () => void = () => {};
