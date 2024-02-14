@@ -75,8 +75,8 @@ async function getTokenFromCode(
 export async function getTokenOauth(
   api: Api
 ): Promise<OauthResult | undefined> {
-  // Check well known ip before starting a server and a browser
-  const req = await fetch("https://1.1.1.1").catch(() => null);
+  // Check internet before starting a server and a browser
+  const req = await fetch("https://vercel.com").catch(() => null);
   if (!req?.ok) {
     const msg = `Failed to authenticate with Vercel (Network error).`;
     return void vscode.window.showErrorMessage(msg);
