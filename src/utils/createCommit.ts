@@ -1,12 +1,10 @@
 import { Commit } from "../features/Commit";
-import type { Meta } from "../features/models";
+import type { Meta, Provider } from "../features/models";
 import { getProvider } from "./getProvider";
 
-export function getCommit(input: Record<string, string>): Commit | undefined {
-  if (Object.keys(input).length !== 0) return;
-  const provider = getProvider(input);
+export function getCommit(meta?: Meta<Provider>): Commit | undefined {
+  const provider = meta && getProvider(meta);
   if (!provider) return;
-  const meta = input as Meta<typeof provider>;
   return new Commit(
     provider,
     meta[`${provider}CommitSha`],

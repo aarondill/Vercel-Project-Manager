@@ -11,17 +11,21 @@ import type { VercelManager } from "./VercelManager";
 timeago.register("en_SHORT", enShort);
 
 class DeploymentItem extends vscode.TreeItem {
-  constructor(public readonly data: Deployment) {
-    const d = new Date(data.created);
-    const formatted = formatDate(d);
-    super(formatted, vscode.TreeItemCollapsibleState.Collapsed);
-    // Set tooltip to commit message, if  applicable, else to "Deployed by ${source}"
-    if (data.source === "git" && data.meta) {
-      const commit = getCommit(data.meta);
-      if (commit) this.tooltip = commit.message;
-    }
-    if (!this.tooltip && data.source)
-      this.tooltip = "Deployed by " + data.source;
+  constructor(
+    public readonly data: Deployment,
+    public readonly commit?: Commit
+  ) {
+    const formattedDate = formatDate(new Date(data.created));
+    const target = data.target ?? "preview"; // is this always preview?
+    const text: (string | undefined)[] = [commit?.branch, formattedDate];
+    const desc = `${target}: ${text.filter(Boolean).join(" - ")}`;
+    super(desc, vscode.TreeItemCollapsibleState.Collapsed);
+    // Set tooltip to commit message, if applicable, else to "Deployed by ${source}"
+    this.tooltip = commit
+      ? commit.message
+      : data.source
+        ? `Deployed by ${data.source}`
+        : undefined;
 
     switch (data.state) {
       case "READY":
@@ -149,26 +153,23 @@ export class DeploymentsProvider
   }
 
   async getChildren(element?: DeploymentItem): Promise<vscode.TreeItem[]> {
-    if (element) {
-      const items = [
-        new DeploymentOpenUrlItem(element.data.url),
-        new DeploymentViewLogItem(element.data.url, element.data.state!),
-      ];
-      if (element.data.meta && Object.keys(element.data.meta).length !== 0) {
-        const commit = getCommit(element.data.meta);
-
-        if (commit) {
-          items.push(
-            ...[
-              new DeploymentBranchItem(commit),
-              new DeploymentCommitItem(commit),
-            ]
-          );
-        }
-      }
-      return items;
+    if (!element) {
+      const res = await this.vercel.deployments.getAll();
+      return res.map(x => {
+        const commit = x.source === "git" ? getCommit(x.meta) : undefined;
+        return new DeploymentItem(x, commit);
+      });
     }
-    const res = (await this.vercel.deployments.getAll()) ?? [];
-    return res.map(x => new DeploymentItem(x));
+    const items = [
+      new DeploymentOpenUrlItem(element.data.url),
+      new DeploymentViewLogItem(element.data.url, element.data.state!),
+    ];
+    if (element.commit) {
+      items.push(
+        new DeploymentBranchItem(element.commit),
+        new DeploymentCommitItem(element.commit)
+      );
+    }
+    return items;
   }
 }

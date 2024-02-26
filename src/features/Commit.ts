@@ -35,32 +35,25 @@ export class Commit {
   ) {}
 
   get summary() {
-    return this.message.split("\n")[0] ?? "(Empty Commit Message)";
+    const summary = this.message.split("\n", 1)[0];
+    return summary || "(Empty Commit Message)";
   }
 
   get url() {
     return urlcat(
       this.urlPatterns[this.provider] + this.commitPatterns[this.provider],
-      {
-        org: this.org,
-        repo: this.repo,
-        sha: this.sha,
-      }
+      { org: this.org, repo: this.repo, sha: this.sha }
     );
   }
 
   get branchUrl() {
     return urlcat(
       this.urlPatterns[this.provider] + this.branchPatterns[this.provider],
-      {
-        org: this.org,
-        repo: this.repo,
-        branch: this.branch,
-      }
+      { org: this.org, repo: this.repo, branch: this.branch }
     );
   }
 
   get shortSha() {
-    return this.sha.substr(0, 7);
+    return this.sha.substring(0, 7);
   }
 }
