@@ -173,32 +173,32 @@ export class VercelManager {
   private deploymentsList: Deployment[] | null = null;
   /** returns the environment variable list, updating it if null */
   async getDeploymentsList() {
-    while (this.fetchingDeployments); //If fetching, wait until done.
     return await (this.deploymentsList ?? this.deployments.getAll());
   }
-  private fetchingDeployments = false;
+  private fetchingDeployments: Promise<Deployment[]> | null = null;
   deployments = {
     /**
      * @returns A list of deployments for the currently selected project and
      * user or empty list if either doesn't exist
      */
     getAll: async () => {
-      if (!this.selectedProject) return [];
-      try {
-        this.fetchingDeployments = true;
-        const limit = workspace
-          .getConfiguration("vercel")
-          .get("DeploymentCount") as number;
+      const selectedProject = this.selectedProject;
+      if (!selectedProject) return [];
+      if (this.fetchingDeployments) return await this.fetchingDeployments; // ensure only one is fetching at a time
+      const limit = workspace
+        .getConfiguration("vercel")
+        .get("DeploymentCount") as number;
+      this.fetchingDeployments = new Promise(async res => {
         const data = await this.api.deployments(
-          { projectId: this.selectedProject, limit: limit ?? 20 },
+          { projectId: selectedProject, limit: limit ?? 20 },
           undefined
         );
-        if (!data.ok) return (this.deploymentsList = []);
-        const r = data.deployments ?? [];
-        return (this.deploymentsList = r);
-      } finally {
-        this.fetchingDeployments = false;
-      }
+        this.deploymentsList = (data.ok && data.deployments) || [];
+        return res(this.deploymentsList);
+      });
+      const res = await this.fetchingDeployments;
+      this.fetchingDeployments = null;
+      return res;
     },
   };
 }
