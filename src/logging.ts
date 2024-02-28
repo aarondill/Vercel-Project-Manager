@@ -8,7 +8,10 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(output);
 }
 //Write a line to the output channel.
-export const log = (s: string): void => output?.appendLine(s);
+export const log = (...s: unknown[]): void =>
+  output ? s.map(String).forEach(output.appendLine) : undefined;
+export const error = (...s: unknown[]): void =>
+  s.forEach(s => log(`Error: ${String(s)}`));
 export const clear = (): void => output?.clear();
 export const show = (preserveFocus?: boolean): void =>
   output?.show(preserveFocus);
