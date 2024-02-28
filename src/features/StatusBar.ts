@@ -2,6 +2,10 @@ import type { StatusBarItem } from "vscode";
 import { StatusBarAlignment, window } from "vscode";
 import { relativeTimeFromDates } from "../utils/formatDates";
 import type { VercelManager } from "./VercelManager";
+import { error } from "../logging";
+
+const capitalFirst = (str: string) =>
+  str.charAt(0).toUpperCase().concat(str.slice(1).toLowerCase());
 
 export class StatusBar {
   private interval: NodeJS.Timeout;
@@ -25,43 +29,32 @@ export class StatusBar {
   }
 
   public constructor(private readonly vercel: VercelManager) {
+    const upd = () =>
+      this.updateStatus().catch(err => error(`updating status bar:`, err));
     this.text = `Loading`;
     this.tooltip = "Loading Vercel deployment status...";
-    this.statusIcon.show();
     this.statusIcon.command = "workbench.view.extension.vercel-sidebar";
-    this.updateStatus().catch(err =>
-      console.error(
-        `something went wrong while updating the status bar: ${String(err)}`
-      )
-    );
-    this.interval = setInterval(() => {
-      this.updateStatus().catch(err =>
-        console.error(
-          `something went wrong while updating the status bar: ${String(err)}`
-        )
-      );
-    }, 10 * 1000); //refresh every 10 secs
+    void upd();
+    this.statusIcon.show();
+    this.interval = setInterval(upd, 10 * 1000); //refresh every 10 secs
+  }
+
+  private contents(text: string, tooltip: string): void {
+    this.text = text;
+    this.tooltip = tooltip;
   }
 
   public async updateStatus(): Promise<void> {
-    if (!(await this.vercel.loggedIn())) {
-      this.text = "Login";
-      this.tooltip = "Click to login";
-      return;
-    }
-    if (!this.vercel.selectedProject) {
-      this.text = "Link Vercel";
-      this.tooltip = "Click to link to Vercel";
-      return;
-    }
+    if (!(await this.vercel.loggedIn()))
+      return this.contents("Login", "Click to login");
+
+    if (!this.vercel.selectedProject)
+      return this.contents("Link Vercel", "Click to link to Vercel");
 
     const deploys = await this.vercel.getDeploymentsList();
 
-    if (deploys.length === 0) {
-      this.text = "Not found";
-      this.tooltip = "No deployments were found";
-      return;
-    }
+    if (deploys.length === 0)
+      return this.contents("Not found", "No deployments were found");
 
     const { state, name, createdAt, source } = deploys[0];
 
@@ -69,12 +62,8 @@ export class StatusBar {
       ? relativeTimeFromDates(new Date(createdAt))
       : "a while";
 
-    const capitalFirst = (str: string) =>
-      str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-    this.text = capitalFirst(state ?? "Unknown");
-
-    this.tooltip = `${name ?? "unknown repo"} (${(
-      state ?? "unknown"
-    ).toLowerCase()}) ${formattedDate} ago via ${source ?? "unknown source"}`;
+    const lowerState = (state ?? "unknown").toLowerCase();
+    const tooltip = `${name ?? "unknown repo"} (${lowerState}) ${formattedDate} ago via ${source ?? "unknown source"}`;
+    return this.contents(capitalFirst(lowerState), tooltip);
   }
 }
