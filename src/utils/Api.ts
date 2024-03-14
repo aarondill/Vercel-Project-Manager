@@ -271,6 +271,19 @@ export class Api {
       },
     }),
   };
+  public deleteAccessToken = this.init<
+    VercelResponse.deleteAuthToken,
+    {
+      /** Use special value 'current' to delete the current access token */
+      tokenId: "current" | (string & Record<never, never>);
+      teamId?: string;
+    }
+  >({
+    path: "/v3/user/tokens/:tokenId",
+    fetch: {
+      method: "DELETE",
+    },
+  });
   public oauth = {
     accessToken: this.init<
       VercelResponse.oauth.accessToken,

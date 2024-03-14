@@ -73,6 +73,7 @@ export class VercelManager {
    * Un-sets authentication and project and calls didLogOut, didDeploymentsUpdated, and didEnvironmentsUpdates;
    */
   async logOut() {
+    await this.api.deleteAccessToken({ tokenId: "current" }, undefined);
     await this.token.setAuth(undefined);
     await this.token.setProject(undefined);
     this.onDidLogOut();
