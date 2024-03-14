@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // 👆 because vercel API requires snake_case keys
-import { env, window, workspace } from "vscode";
+import { window, workspace } from "vscode";
 import { Api } from "../utils/Api";
+import { getTokenOauth } from "../utils/oauth";
 import type { TokenManager } from "./TokenManager";
 import type {
   Deployment,
@@ -9,7 +10,6 @@ import type {
   VercelResponse,
   VercelTargets,
 } from "./models";
-import { getTokenOauth } from "../utils/oauth";
 
 export class VercelManager {
   public onDidEnvironmentsUpdated: () => void = () => {};
@@ -45,17 +45,18 @@ export class VercelManager {
     };
   }
   loggedIn = async () => !!(await this.token.getAuth())?.accessToken;
-  async debug(): Promise<void> {
-    const msg = [
-      `Logged in: ${await this.loggedIn()}`,
-      `Environment list (cached): ${this.envList?.toString()}`,
-      `Project information (cached): ${this.projectInfo?.toString()}`,
-      `User vercel information (cached): ${this.userInfo?.toString()}`,
-      `Selected project id: ${this.selectedProject}`,
-      `Authentication: ${(await this.token.getAuth())?.toString()}`,
-    ].join(",\n");
-    const act = await window.showInformationMessage(msg, "Copy");
-    if (act === "Copy") return await env.clipboard.writeText(msg);
+  async debug(): Promise<Record<string, unknown>> {
+    const ident = (x: unknown) => x;
+    const orErr = <T>(p: Thenable<T>) => p.then(ident, ident);
+
+    return {
+      "Logged in": await orErr(this.loggedIn()),
+      "Environment list": await orErr(this.env.getEnvList(true)),
+      "Project information": await orErr(this.project.getInfo(true)),
+      "User vercel information": await orErr(this.user.getInfo(true)),
+      "Selected project id": this.selectedProject,
+      Authentication: await orErr(this.token.getAuth()),
+    };
   }
 
   async logIn(): Promise<boolean> {
@@ -124,7 +125,10 @@ export class VercelManager {
       return (this.envList = r);
     },
     /** returns the environment variable list, updating it if null */
-    getEnvList: async () => await (this.envList ?? this.env.getAll()),
+    getEnvList: async (refresh: boolean = false) => {
+      if (refresh || !this.envList) return await this.env.getAll();
+      return this.envList;
+    },
     /**
      *
      * @param key Name of var to create
