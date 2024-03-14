@@ -116,6 +116,7 @@ export namespace VercelResponse {
       message: string;
     };
   };
+  export type deleteAuthToken = { tokenId: string };
   export namespace oauth {
     export type accessToken = {
       token_type: "Bearer";
