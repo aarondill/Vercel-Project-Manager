@@ -13,7 +13,12 @@ export class OpenDeploymentsLink implements Command {
     if (!user)
       return void vscode.window.showErrorMessage("Could not get user info!");
     const base = vscode.Uri.parse("https://vercel.com");
-    const url = vscode.Uri.joinPath(base, user.username, projectInfo.name);
+    const url = vscode.Uri.joinPath(
+      base,
+      user.username,
+      projectInfo.name,
+      "/deployments"
+    );
     await vscode.env.openExternal(url);
   }
 }
