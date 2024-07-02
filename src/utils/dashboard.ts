@@ -4,13 +4,21 @@ import * as vscode from "vscode";
 async function getBaseURL(
   vercel: VercelManager
 ): Promise<vscode.Uri | undefined> {
-  const userURL = vscode.workspace
-    .getConfiguration("vercel")
-    .get("DashboardURL");
-  // If the user provides a URL, use that (without the username)
-  if (typeof userURL === "string" && userURL.length > 0) {
+  const teamId = await vercel.teamId();
+  const projectAccountId = (await vercel.project.getInfo())?.accountId;
+  // If the current progect is a team project, use the team dashboard URL
+  if (teamId && projectAccountId === teamId) {
+    const userURL = vscode.workspace
+      .getConfiguration("vercel")
+      .get("TeamDashboardURL");
+    if (typeof userURL !== "string" || userURL.length === 0) {
+      return void vscode.window.showErrorMessage(
+        "To open the team dashboard, please set the TeamDashboardURL setting."
+      );
+    }
     return vscode.Uri.parse(userURL);
   }
+
   // Else, use the default URL and append the username
   const base = vscode.Uri.parse("https://vercel.com");
   const user = await vercel.user.getInfo();

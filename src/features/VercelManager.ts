@@ -45,6 +45,7 @@ export class VercelManager {
     };
   }
   loggedIn = async () => !!(await this.token.getAuth())?.accessToken;
+  teamId = async () => (await this.token.getAuth())?.teamId;
   async debug(): Promise<Record<string, unknown>> {
     const ident = (x: unknown) => x;
     const orErr = <T>(p: Thenable<T>) => p.then(ident, ident);
