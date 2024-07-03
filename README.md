@@ -34,6 +34,7 @@ This extension contributes the following settings:
 
 - `vercel.RefreshRate`: Number of minutes to wait between refreshes of Deployments and Environment. (Default 5 minutes)
 - `vercel.DeploymentCount`: Number of deployments to display from Vercel. (Default 20)
+- `vercel.TeamDashboardURL`: (For use with teams) The URL to append the project name to.
 
 ## Contributing
 
