@@ -67,7 +67,7 @@ export class SetEnvironment implements Command {
     //> Get user options of targets to apply to
     /** list of initial targets */
     const initialTargets =
-      typeof env.target === "string" ? [env.target] : env.target ?? [];
+      typeof env.target === "string" ? [env.target] : (env.target ?? []);
 
     let targets = initialTargets;
     /** Check if Arguments say only to edit values */

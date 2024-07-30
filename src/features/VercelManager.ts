@@ -123,7 +123,7 @@ export class VercelManager {
         undefined
       );
       if (!response.ok) return (this.envList = []);
-      const r = "envs" in response ? response.envs ?? [] : [response];
+      const r = "envs" in response ? (response.envs ?? []) : [response];
       return (this.envList = r);
     },
     /** returns the environment variable list, updating it if null */
