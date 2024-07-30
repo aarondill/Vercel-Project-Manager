@@ -1,8 +1,8 @@
+import * as timeago from "timeago.js";
 import type { StatusBarItem } from "vscode";
 import { StatusBarAlignment, window } from "vscode";
-import { relativeTimeFromDates } from "../utils/formatDates";
-import type { VercelManager } from "./VercelManager";
 import { error } from "../logging";
+import type { VercelManager } from "./VercelManager";
 
 const capitalFirst = (str: string) =>
   str.charAt(0).toUpperCase().concat(str.slice(1).toLowerCase());
@@ -58,12 +58,10 @@ export class StatusBar {
 
     const { state, name, createdAt, source } = deploys[0];
 
-    const formattedDate = createdAt
-      ? relativeTimeFromDates(new Date(createdAt))
-      : "a while";
+    const timeAgo = createdAt ? timeago.format(new Date(createdAt)) : "a while";
 
     const lowerState = (state ?? "unknown").toLowerCase();
-    const tooltip = `${name ?? "unknown repo"} (${lowerState}) ${formattedDate} ago via ${source ?? "unknown source"}`;
+    const tooltip = `${name ?? "unknown repo"} (${lowerState}) ${timeAgo} via ${source ?? "unknown source"}`;
     return this.contents(capitalFirst(lowerState), tooltip);
   }
 }

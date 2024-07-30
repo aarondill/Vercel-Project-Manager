@@ -1,14 +1,10 @@
-import * as timeago from "timeago.js";
-import enShort from "timeago.js/lib/lang/en_short";
 import * as vscode from "vscode";
 
 import { getCommit } from "../utils/createCommit";
 import { formatDate } from "../utils/formatDates";
 import type { Commit } from "./Commit";
-import type { Deployment } from "./models";
 import type { VercelManager } from "./VercelManager";
-
-timeago.register("en_SHORT", enShort);
+import type { Deployment } from "./models";
 
 class DeploymentItem extends vscode.TreeItem {
   constructor(
